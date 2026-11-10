@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Management - Doctor &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Doctor Management</h1>
+                    <p>Add, edit and manage doctor profiles, status and schedules.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="DoctorProfile.html" class="action-button"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
+                </div>
+            </div>
+ 
+            <!-- Filters -->
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="filterSearch">Doctor name or ID</label>
+                        <input type="text" id="filterSearch" placeholder="e.g. Faris or D-002">
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterDept">Department</label>
+                        <select id="filterDept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus">
+                            <option value="">All statuses</option>
+                            <option>Active</option>
+                            <option>On leave</option>
+                            <option>Inactive</option>
+                        </select>
+                    </div>
+ 
+                    <div class="filter-actions">
+                        <button type="button" class="search-button" id="btnSearch"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <button type="button" class="action-button secondary" id="btnReset">Reset</button>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- Doctor table -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Doctors</h2>
+                    <span class="date-label" id="resultCount"></span>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table table-hover" id="doctorTable">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Specialty</th>
+                                <th>Department</th>
+                                <th>Contact</th>
+                                <th>Upcoming appts</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorRows"></tbody>
+                    </table>
+                </div>
+ 
+                <div class="empty-row" id="emptyMessage">No doctors match your filters.</div>
+                
+                <div class="pagination" id="pagination"></div>
+            </section>
+
+            <!-- Doctor schedule and availability -->
+            <div class="page-header">
+                <div>
+                    <h1>Schedule &amp; Availability</h1>
+                    <p>Set weekly consultation hours and block out OT, leave and other unavailable times.</p>
+                </div>
+            </div>
+
+            <!-- Doctor selector -->
+            <section class="panel panel-full">
+                <div class="doctor-switch">
+                    <div class="avatar" id="doctorAvatar">?</div>
+                    <div class="field">
+                        <label for="doctorSelect">Doctor</label>
+                        <select id="doctorSelect"></select>
+                    </div>
+                    <div id="doctorMeta" class="date-label"></div>
+                </div>
+            </section>
+ 
+            <!-- Weekly consultation hours -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Weekly consultation hours</h2>
+                    <div class="field" style="min-width: 190px;">
+                        <label for="slotLength">Appointment length</label>
+                        <select id="slotLength">
+                            <option value="15">15 minutes</option>
+                            <option value="30" selected>30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                    </div>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table hours-table" id="hoursTable">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Morning session</th>
+                                <th>Afternoon session</th>
+                                <th>Bookable slots</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+ 
+                <div class="message-box" id="hoursMessage"></div>
+ 
+                <div class="form-actions" style="margin-top: 18px;">
+                    <button type="button" class="action-button" id="saveHours"><i class="fa-solid fa-floppy-disk"></i> Save consultation hours</button>
+                    <button type="button" class="action-button secondary" id="resetHours">Reset changes</button>
+                </div>
+            </section>
+ 
+            <!-- Unavailability -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>OT, leave and other unavailable times</h2>
+                </div>
+ 
+                <div class="inline-fields">
+                    <div class="field">
+                        <label for="blockType">Type</label>
+                        <select id="blockType">
+                            <option>OT</option>
+                            <option>Leave</option>
+                            <option>Conference</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="startDate">From date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="field">
+                        <label for="startTime">From time</label>
+                        <input type="time" id="startTime" value="09:00">
+                    </div>
+                    <div class="field">
+                        <label for="endDate">To date</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <div class="field">
+                        <label for="endTime">To time</label>
+                        <input type="time" id="endTime" value="12:00">
+                    </div>
+                    <div class="field" style="flex: 1; min-width: 200px;">
+                        <label for="blockNote">Note</label>
+                        <input type="text" id="blockNote" placeholder="e.g. Knee replacement, Theatre 2">
+                    </div>
+                </div>
+ 
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-bottom: 4px;">
+                    <label class="check-row"><input type="checkbox" id="allDay"> All day</label>
+                    <label class="check-row"><input type="checkbox" id="notifyAffected" checked> Notify patients with affected appointments</label>
+                    <button type="button" class="action-button" id="addBlock"><i class="fa-solid fa-plus"></i> Add</button>
+                </div>
+ 
+                <div class="message-box" id="blockMessage"></div>
+ 
+                <div class="table-responsive" style="margin-top: 20px;">
+                    <table class="table table-hover" id="blockTable">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Note</th>
+                                <th>Affected appointments</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+ 
+                <div class="empty-row" id="blockEmpty">No OT, leave or other unavailable times for this doctor.</div>
+            </section>
+
+            <!-- Deactivate doctor modal -->
+            <div class="modal-backdrop" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+                <div class="modal">
+                    <h2 id="statusTitle">Deactivate doctor</h2>
+                    <p id="statusSummary"></p>
+
+                    <div class="message-box warning" id="statusWarning"></div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="action-button secondary" id="statusClose">Keep active</button>
+                        <button type="button" class="action-button danger" id="statusConfirm">Deactivate doctor</button>
+                    </div>
+                </div>
+            </div>
+ 
+        </main>
+    </div>
+
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Doctors.js"></script>
+
+</body>
+</html>

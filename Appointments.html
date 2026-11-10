@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Appointments - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Appoinment.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>All Appointments</h1>
+                    <p>Search, create, reschedule and cancel patient appointments.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="AppointmentForm.html" class="action-button"><i class="fa-solid fa-calendar-plus"></i> New appointment</a>
+                </div>
+            </div>
+ 
+            <!-- Filters -->
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="filterSearch">Patient name or ID</label>
+                        <input type="text" id="filterSearch" placeholder="e.g. P-1001 or Tan">
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus">
+                            <option value="">All statuses</option>
+                            <option value="Booked">Booked</option>
+                            <option value="Rescheduled">Rescheduled</option>
+                            <option value="Checked in">Checked in</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="No-show">No-show</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterDept">Department</label>
+                        <select id="filterDept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterDoctor">Doctor</label>
+                        <select id="filterDoctor">
+                            <option value="">All doctors</option>
+                            <option>Dr. Tan Bee Lian</option>
+                            <option>Dr. Ahmad Faris</option>
+                            <option>Dr. Lee Chong Wei</option>
+                            <option>Dr. Siti Hajar</option>
+                            <option>Dr. Nadia Rahman</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterFrom">From date</label>
+                        <input type="date" id="filterFrom">
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterTo">To date</label>
+                        <input type="date" id="filterTo">
+                    </div>
+ 
+                    <div class="filter-actions">
+                        <button type="button" class="search-button" id="btnSearch"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <button type="button" class="action-button secondary" id="btnReset">Reset</button>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- Appointment table -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Appointments</h2>
+                    <span class="date-label" id="resultCount"></span>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table table-hover" id="appointmentTable">
+                        <thead>
+                            <tr>
+                                <th>Appointment ID</th>
+                                <th>Patient</th>
+                                <th>Department</th>
+                                <th>Doctor</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentRows"></tbody>
+                    </table>
+                </div>
+ 
+                <div class="empty-row" id="emptyMessage">No appointments match your filters.</div>
+ 
+                <div class="pagination" id="pagination"></div>
+            </section>
+ 
+        </main>
+    </div>
+ 
+    <!-- Cancel appointment modal -->
+    <div class="modal-backdrop" id="cancelModal" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+        <div class="modal">
+            <h2 id="cancelTitle">Cancel appointment</h2>
+            <p id="cancelSummary"></p>
+ 
+            <div class="field">
+                <label for="cancelReason">Reason</label>
+                <select id="cancelReason">
+                    <option>Patient request</option>
+                    <option>Doctor unavailable</option>
+                    <option>Doctor in OT</option>
+                    <option>Duplicate booking</option>
+                    <option>Other</option>
+                </select>
+            </div>
+ 
+            <label class="check-row">
+                <input type="checkbox" id="cancelNotify" checked>
+                Notify the patient about the cancellation
+            </label>
+ 
+            <div class="modal-actions">
+                <button type="button" class="action-button secondary" id="cancelClose">Keep appointment</button>
+                <button type="button" class="action-button danger" id="cancelConfirm">Cancel appointment</button>
+            </div>
+        </div>
+    </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+        const esc = AMS_UI.esc;
+        const enc = encodeURIComponent;
+ 
+        const PAGE_SIZE = 20;
+        const params = new URLSearchParams(location.search);
+ 
+        // ?filter=conflict (from the dashboard) lists only appointments
+        // that clash with a doctor's OT, leave or other block.
+        let conflictOnly =
+            params.get("filter") === "conflict" ||
+            params.get("conflict") === "true";
+ 
+        let currentPage = 1;
+        let activeId = null;
+ 
+        /* ---------- Filters ---------- */
+        function currentFilters(page) {
+            return {
+                search: el("filterSearch").value.trim(),
+                status: el("filterStatus").value,
+                department: el("filterDept").value,
+                doctorId: el("filterDoctor").value,
+                dateFrom: el("filterFrom").value,
+                dateTo: el("filterTo").value,
+                conflict: conflictOnly ? "true" : "",
+                page: page || 1,
+                pageSize: PAGE_SIZE
+            };
+        }
+ 
+        function fillFilters() {
+            el("filterDept").innerHTML =
+                '<option value="">All departments</option>' +
+                AMS.getDepartments().map(d =>
+                    "<option>" + esc(d.name) + "</option>").join("");
+ 
+            el("filterDoctor").innerHTML =
+                '<option value="">All doctors</option>' +
+                AMS.getDoctors().map(d =>
+                    '<option value="' + esc(d.id) + '">' + esc(d.name) + "</option>").join("");
+        }
+ 
+        /* ---------- Table ---------- */
+        function rowHtml(a) {
+            const actions = [];
+ 
+            if (AMS.canEdit(a)) {
+                actions.push(
+                    '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="table-button">' +
+                    (a.hasConflict ? "Reschedule" : "Edit") + "</a>");
+ 
+                if (AMS.canMarkOutcome(a)) {
+                    actions.push('<button type="button" class="table-button" data-action="complete">Done</button>');
+                    actions.push('<button type="button" class="table-button" data-action="noshow">No-show</button>');
+                }
+ 
+                actions.push('<button type="button" class="table-button danger" data-action="cancel">Cancel</button>');
+            } else {
+                actions.push(
+                    '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="table-button">View</a>');
+            }
+ 
+            const flag = a.hasConflict
+                ? ' <i class="fa-solid fa-triangle-exclamation conflict-flag" title="Clashes with the doctor\'s OT, leave or other block"></i>'
+                : "";
+ 
+            return '<tr data-id="' + esc(a.id) + '">' +
+                "<td>" + esc(a.id) + "</td>" +
+                "<td>" + esc(a.patientName) + '<span class="cell-sub">' + esc(a.patientId) + "</span></td>" +
+                "<td>" + esc(a.department) + "</td>" +
+                "<td>" + esc(a.doctorName || a.doctorId) + "</td>" +
+                "<td>" + esc(AMS.formatDate(a.date)) + "</td>" +
+                "<td>" + esc(AMS.formatTime(a.time)) + flag + "</td>" +
+                '<td><span class="badge ' + AMS.getStatusBadge(a.status) + '">' + esc(a.status) + "</span></td>" +
+                '<td><div class="table-actions">' + actions.join("") + "</div></td>" +
+                "</tr>";
+        }
+ 
+        function renderPagination(page) {
+            const size = page.pageSize || PAGE_SIZE;
+            const total = page.totalItems || 0;
+            const pages = Math.max(1, Math.ceil(total / size));
+            const from = total ? (page.page - 1) * size + 1 : 0;
+            const to = Math.min(total, page.page * size);
+ 
+            const first = Math.max(1, page.page - 2);
+            const last = Math.min(pages, page.page + 2);
+            let buttons = '<button type="button" class="page-button" data-page="' + (page.page - 1) + '"' +
+                          (page.page <= 1 ? " disabled" : "") + ">Prev</button>";
+ 
+            for (let p = first; p <= last; p++) {
+                buttons += '<button type="button" class="page-button' + (p === page.page ? " current" : "") +
+                           '" data-page="' + p + '">' + p + "</button>";
+            }
+ 
+            buttons += '<button type="button" class="page-button" data-page="' + (page.page + 1) + '"' +
+                       (page.page >= pages ? " disabled" : "") + ">Next</button>";
+ 
+            el("pagination").innerHTML =
+                "<span>Showing " + from + " to " + to + " of " + total + "</span>" +
+                '<div class="pagination-buttons">' + buttons + "</div>";
+        }
+ 
+        function renderTable(page) {
+            el("appointmentRows").innerHTML = page.items.map(rowHtml).join("");
+            el("resultCount").textContent = page.totalItems + " appointments";
+            el("emptyMessage").style.display = page.items.length ? "none" : "block";
+            renderPagination(page);
+        }
+
+        el("pagination").addEventListener("click", e => {
+
+            const btn = e.target.closest("button[data-page]");
+
+            if (!btn || btn.disabled) return;
+
+            currentPage = Number(btn.dataset.page);
+
+            load();
+        });
+ 
+        async function load(page) {
+            currentPage = page || 1;
+            el("emptyMessage").style.display = "none";
+            el("appointmentRows").innerHTML = '<tr><td colspan="8">Loading appointments...</td></tr>';
+ 
+            try {
+                renderTable(await AMS.loadAppointments(currentFilters(currentPage)));
+            } catch (error) {
+                el("appointmentRows").innerHTML = "";
+                el("resultCount").textContent = "";
+                el("pagination").innerHTML = "";
+                AMS_UI.showError(error);
+            }
+        }
+ 
+        el("btnSearch").addEventListener("click", () => { AMS_UI.clearMessage(); load(1); });
+        el("filterSearch").addEventListener("keydown", e => { if (e.key === "Enter") { AMS_UI.clearMessage(); load(1); } });
+ 
+        el("btnReset").addEventListener("click", () => {
+            ["filterSearch", "filterStatus", "filterDept", "filterDoctor", "filterFrom", "filterTo"]
+                .forEach(id => el(id).value = "");
+ 
+            conflictOnly = false;
+            history.replaceState(null, "", location.pathname);
+            AMS_UI.clearMessage();
+            load(1);
+        });
+ 
+        el("pagination").addEventListener("click", e => {
+            const btn = e.target.closest("button[data-page]");
+            if (btn && !btn.disabled) load(Number(btn.dataset.page));
+        });
+ 
+        /* ---------- Row actions ---------- */
+        const modal = el("cancelModal");
+ 
+        function openModal(appointment) {
+            activeId = appointment.id;
+ 
+            el("cancelSummary").textContent =
+                appointment.id + " for " + appointment.patientName +
+                " with " + (appointment.doctorName || appointment.doctorId) +
+                " on " + AMS.formatDate(appointment.date) + ", " +
+                AMS.formatTime(appointment.time) + ".";
+ 
+            modal.classList.add("open");
+            el("cancelConfirm").focus();
+        }
+ 
+        function closeModal() {
+            modal.classList.remove("open");
+            activeId = null;
+        }
+ 
+        el("appointmentRows").addEventListener("click", async e => {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+ 
+            const id = btn.closest("tr").dataset.id;
+            const appointment = AMS.getAppointmentById(id);
+            if (!appointment) return;
+ 
+            if (btn.dataset.action === "cancel") {
+                openModal(appointment);
+                return;
+            }
+ 
+            const status = btn.dataset.action === "complete" ? "Completed" : "No-show";
+            if (!confirm("Mark " + id + " as " + status + "?")) return;
+ 
+            btn.disabled = true;
+            const result = await AMS.setAppointmentStatus(id, status);
+            AMS_UI.message(result.success ? "success" : "error", result.message);
+            load(currentPage);
+        });
+ 
+        el("cancelClose").addEventListener("click", closeModal);
+        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+ 
+        el("cancelConfirm").addEventListener("click", async () => {
+            if (!activeId) return;
+ 
+            const id = activeId;
+            el("cancelConfirm").disabled = true;
+ 
+            // The appointment is kept with status Cancelled, so the
+            // cancellation analytics keep their history.
+            const result = await AMS.cancelAppointment(id, el("cancelReason").value, {
+                notifyPatient: el("cancelNotify").checked
+            });
+ 
+            el("cancelConfirm").disabled = false;
+            closeModal();
+            AMS_UI.message(result.success ? "success" : "error", result.message);
+            load(currentPage);
+        });
+ 
+        /* ---------- Start ---------- */
+        (async function init() {
+            AMS_UI.initPage();
+ 
+            try {
+                await Promise.all([
+                    AMS.loadDepartments(),
+                    AMS.loadDoctors({ pageSize: 100 })
+                ]);
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            fillFilters();
+            load(1);
+        })();
+    </script>
+</body>
+</html>

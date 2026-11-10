@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peak Periods - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Analytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Peak Periods</h1>
+                    <p>The busiest days and times for appointments, to help plan doctor schedules.</p>
+                </div>
+            </div>
+ 
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="period">Period</label>
+                        <select id="period">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="dept">Department</label>
+                        <select id="dept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="doctor">Doctor</label>
+                        <select id="doctor"></select>
+                    </div>
+                </div>
+            </section>
+ 
+            <section class="summary-grid">
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDay">-</div>
+                        <div class="summary-label" id="cDayLabel">Busiest day</div>
+                    </div>
+                </div>
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <div class="summary-value" id="cHour">-</div>
+                        <div class="summary-label" id="cHourLabel">Busiest hour</div>
+                    </div>
+                </div>
+                <div class="summary-card danger">
+                    <div class="summary-icon"><i class="fa-solid fa-fire"></i></div>
+                    <div>
+                        <div class="summary-value" id="cSlot">-</div>
+                        <div class="summary-label" id="cSlotLabel">Peak time slot</div>
+                    </div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-icon"><i class="fa-solid fa-moon"></i></div>
+                    <div>
+                        <div class="summary-value" id="cQuiet">-</div>
+                        <div class="summary-label" id="cQuietLabel">Quietest day</div>
+                    </div>
+                </div>
+            </section>
+ 
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Appointments by day and hour</h2>
+                    <span class="date-label" id="rangeLabel"></span>
+                </div>
+                <div class="table-responsive" id="heatmap"></div>
+                <p class="method-note" style="margin-top: 12px;">Hours show the slot start time. The lunch break (12:00 to 14:00) is not shown. Sunday is closed.</p>
+            </section>
+ 
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header"><h2>By day of week</h2></div>
+                    <div id="dayChart"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h2>By hour of day</h2></div>
+                    <div id="hourChart"></div>
+                </div>
+            </section>
+ 
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header"><h2>Top 5 busiest time slots</h2></div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr><th>Rank</th><th>Day</th><th>Time</th><th>Total</th><th>Average per week</th></tr>
+                            </thead>
+                            <tbody id="topRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+ 
+                <div class="panel">
+                    <div class="panel-header"><h2>What this suggests</h2></div>
+                    <ul class="insight-list" id="insights"></ul>
+                </div>
+            </section>
+ 
+        </main>
+    </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Analytics.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+        const esc = AMS_UI.esc;
+ 
+        const DAYS  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const HOURS = [9, 10, 11, 14, 15, 16];
+        const pad = n => String(n).padStart(2, "0");
+        const hourLabel = h => pad(h) + ":00";
+ 
+        let ticket = 0;
+ 
+        async function fillFilters() {
+            el("dept").innerHTML = '<option value="">All departments</option>' +
+                AMS.getDepartments().map(d => "<option>" + esc(d.name) + "</option>").join("");
+ 
+            await fillDoctors();
+        }
+ 
+        async function fillDoctors() {
+            const keep = el("doctor").value;
+            let list = [];
+ 
+            try {
+                list = (await AMS.loadDoctors({ department: el("dept").value, pageSize: 100 })).items;
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            el("doctor").innerHTML = '<option value="">All doctors</option>' +
+                list.map(d => '<option value="' + esc(d.id) + '">' + esc(d.name) + "</option>").join("");
+ 
+            if (Array.from(el("doctor").options).some(o => o.value === keep)) el("doctor").value = keep;
+        }
+ 
+        // How many times each weekday occurs in the period, for "average per week"
+        function weekdayCounts(from, to) {
+            const counts = {};
+            let c = AMS.combineDateTime(from, "00:00");
+            const end = AMS.combineDateTime(to, "00:00");
+ 
+            while (c <= end) {
+                const name = DAYS[(c.getDay() + 6) % 7];
+                counts[name] = (counts[name] || 0) + 1;
+                c = new Date(c.getFullYear(), c.getMonth(), c.getDate() + 1);
+            }
+ 
+            return counts;
+        }
+ 
+        function render(data, range) {
+            el("rangeLabel").textContent = AMS.formatDate(range.dateFrom) + " to " + AMS.formatDate(range.dateTo);
+ 
+            // matrix[day][hour] from the server's { dayOfWeek, hour, count } rows
+            const matrix = DAYS.map(() => HOURS.map(() => 0));
+            let any = 0;
+ 
+            // The bridge may hand over the bare list when heatmap is the only field
+            const cellsIn = Array.isArray(data) ? data : (data && data.heatmap) || [];
+ 
+            cellsIn.forEach(cell => {
+                const d = DAYS.indexOf(cell.dayOfWeek);
+                const h = HOURS.indexOf(Number(cell.hour));
+ 
+                if (d >= 0 && h >= 0) {
+                    matrix[d][h] += Number(cell.count) || 0;
+                    any += Number(cell.count) || 0;
+                }
+            });
+ 
+            const dayTotals = matrix.map(row => row.reduce((s, v) => s + v, 0));
+            const hourTotals = HOURS.map((h, hi) => matrix.reduce((s, row) => s + row[hi], 0));
+            const argMax = arr => arr.indexOf(Math.max(...arr));
+            const argMin = arr => arr.indexOf(Math.min(...arr));
+ 
+            if (!any) {
+                ["cDay", "cHour", "cSlot", "cQuiet"].forEach(id => {
+                    el(id).textContent = "None";
+                    el(id + "Label").textContent = "No data for this selection";
+                });
+                el("heatmap").innerHTML = '<p class="method-note">No appointments in this period.</p>';
+                el("dayChart").innerHTML = el("hourChart").innerHTML = el("topRows").innerHTML = el("insights").innerHTML = "";
+                return;
+            }
+ 
+            /* ----- cards ----- */
+            const bd = argMax(dayTotals), bh = argMax(hourTotals), qd = argMin(dayTotals);
+            let peak = { d: 0, h: 0, v: -1 };
+            matrix.forEach((row, d) => row.forEach((v, h) => { if (v > peak.v) peak = { d: d, h: h, v: v }; }));
+ 
+            el("cDay").textContent = DAYS[bd];
+            el("cDayLabel").textContent = "Busiest day, " + dayTotals[bd] + " appointments";
+            el("cHour").textContent = hourLabel(HOURS[bh]);
+            el("cHourLabel").textContent = "Busiest hour, " + hourTotals[bh] + " appointments";
+            el("cSlot").textContent = DAYS[peak.d].slice(0, 3) + " " + hourLabel(HOURS[peak.h]);
+            el("cSlotLabel").textContent = "Peak slot, " + peak.v + " appointments";
+            el("cQuiet").textContent = DAYS[qd];
+            el("cQuietLabel").textContent = "Quietest day, " + dayTotals[qd] + " appointments";
+ 
+            /* ----- charts ----- */
+            Charts.heatmap(el("heatmap"), DAYS, HOURS.map(hourLabel), matrix, "appointments");
+            Charts.columns(el("dayChart"), DAYS.map((n, i) => ({ label: n.slice(0, 3), value: dayTotals[i], highlight: i === bd })));
+            Charts.columns(el("hourChart"), HOURS.map((h, i) => ({ label: hourLabel(h), value: hourTotals[i], highlight: i === bh })));
+ 
+            /* ----- top 5 slots ----- */
+            const counts = weekdayCounts(range.dateFrom, range.dateTo);
+            const cells = [];
+            matrix.forEach((row, d) => row.forEach((v, h) => cells.push({ d: d, h: h, v: v })));
+            cells.sort((a, b) => b.v - a.v);
+ 
+            el("topRows").innerHTML = cells.slice(0, 5).map((c, i) => {
+                const weeks = counts[DAYS[c.d]] || 1;
+ 
+                return "<tr><td>" + (i + 1) + "</td><td>" + DAYS[c.d] + "</td><td>" + hourLabel(HOURS[c.h]) + " to " + hourLabel(HOURS[c.h] + 1) +
+                       "</td><td><strong>" + c.v + "</strong></td><td>" + (c.v / weeks).toFixed(1) + "</td></tr>";
+            }).join("");
+ 
+            /* ----- insights ----- */
+            const weeksPeak = counts[DAYS[peak.d]] || 1;
+            const lowSlot = cells[cells.length - 1];
+            const insights = [
+                ["fa-fire", DAYS[peak.d] + " " + hourLabel(HOURS[peak.h]) + " is the busiest slot, averaging " + (peak.v / weeksPeak).toFixed(1) + " appointments a week. Make sure enough doctors are scheduled then."],
+                ["fa-arrows-left-right", "Demand on " + DAYS[bd] + " is " + (dayTotals[bd] / Math.max(1, dayTotals[qd])).toFixed(1) + " times that of " + DAYS[qd] + ". Shifting some bookings to quieter days would even out the load."],
+                ["fa-clock", "The " + hourLabel(HOURS[argMin(hourTotals)]) + " hour is the quietest. It could suit longer or follow-up consultations."],
+                ["fa-triangle-exclamation", "Avoid scheduling OT or leave in the busiest slots. Blocking " + DAYS[lowSlot.d] + " " + hourLabel(HOURS[lowSlot.h]) + " has the least impact."]
+            ];
+ 
+            el("insights").innerHTML = insights.map(i => '<li><i class="fa-solid ' + i[0] + '"></i><span>' + i[1] + "</span></li>").join("");
+        }
+ 
+        async function load() {
+            const range = AMS.getPeriodRange(Number(el("period").value));
+            const mine = ++ticket;
+ 
+            try {
+                const data = await AMS.loadPeakPeriods({
+                    dateFrom: range.dateFrom,
+                    dateTo: range.dateTo,
+                    department: el("dept").value,
+                    doctorId: el("doctor").value
+                });
+ 
+                if (mine !== ticket) return;
+                AMS_UI.clearMessage();
+                render(data || {}, range);
+            } catch (error) {
+                if (mine === ticket) AMS_UI.showError(error);
+            }
+        }
+ 
+        el("period").addEventListener("change", load);
+        el("doctor").addEventListener("change", load);
+        el("dept").addEventListener("change", async () => { await fillDoctors(); load(); });
+ 
+        (async function init() {
+            if (!AMS_UI.initPage()) return;
+ 
+            try {
+                await AMS.loadDepartments();
+                await fillFilters();
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            load();
+        })();
+    </script>
+
+</body>
+</html>

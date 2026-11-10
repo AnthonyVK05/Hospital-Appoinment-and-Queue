@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Appointment &amp; Doctor Management</title>
+ 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+ 
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+ 
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Today's appointments and doctor availability at a glance.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="DoctorProfile.html" class="action-button"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
+                </div>
+            </div>
+ 
+            <!-- Summary cards -->
+            <section class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="summary-value" id="cToday">-</div>
+                        <div class="summary-label">Today's appointments</div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-week"></i></div>
+                    <div>
+                        <div class="summary-value" id="cUpcoming">-</div>
+                        <div class="summary-label">Upcoming, next 7 days</div>
+                    </div>
+                </div>
+
+
+                <div class="summary-card danger">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                    <div>
+                        <div class="summary-value" id="cCancel">-</div>
+                        <div class="summary-label">Cancellations today</div>
+                    </div>
+                </div>
+
+                <div class="summary-card success">
+                    <div class="summary-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDuty">-</div>
+                        <div class="summary-label">Doctors on duty today</div>
+                    </div>
+                </div>
+            </section>
+ 
+                <!-- Shown only when the server sends notification figures -->
+                <div class="summary-card" id="cardNotif" style="display: none;">
+                    <div class="summary-icon"><i class="fa-solid fa-bell"></i></div>
+                    <div>
+                        <div class="summary-value" id="cNotif">-</div>
+                        <div class="summary-label" id="cNotifLabel">Notifications sent</div>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- Today's schedule + doctor availability -->
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Today's schedule</h2>
+                        <a href="Appointments.html" class="panel-link">View all appointments</a>
+                    </div>
+ 
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleRows">
+                                <tr><td colspan="6">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+ 
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Doctor availability today</h2>
+                        <a href="DoctorSchedule.html" class="panel-link">Manage schedules</a>
+                    </div>
+ 
+                    <ul class="availability-list" id="availabilityList"></ul>
+                </div>
+            </section>
+ 
+            <!-- Needs attention -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Needs attention</h2>
+                </div>
+ 
+                <ul class="attention-list" id="attentionList"></ul>
+            </section>
+ 
+            <!-- Demand by department + 7-day trend -->
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Appointments by department, this week</h2>
+                        <a href="AppointmentDemand.html" class="panel-link">View analysis</a>
+                    </div>
+ 
+                    <div id="deptBars"></div>
+                </div>
+ 
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Booked vs cancelled, last 7 days</h2>
+                        <a href="CancellationAnalysis.html" class="panel-link">View analysis</a>
+                    </div>
+ 
+                    <div id="trendChart"></div>
+                </div>
+            </section>
+ 
+        </main>
+    </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Dashboard.js"></script>
+
+</body>
+</html>

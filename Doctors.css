@@ -1,0 +1,284 @@
+/* ================================================================
+   Doctor pages: avatars, profile summary, schedule editor
+   ================================================================ */
+ 
+.badge-inactive { background-color: #e5e7eb; color: #374151; }
+.badge-conference { background-color: #dbeafe; color: #1e3a8a; }
+ 
+.avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #92bdfa;
+    background-size: cover;
+    background-position: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: rgb(0, 6, 116);
+}
+ 
+.avatar.large {
+    width: 88px;
+    height: 88px;
+    font-size: 30px;
+}
+ 
+.doctor-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+ 
+.doctor-name {
+    font-weight: 700;
+}
+ 
+/* ---------- Profile summary panel ---------- */
+.profile-summary {
+    text-align: center;
+}
+ 
+.profile-summary .avatar {
+    margin: 0 auto 12px;
+}
+ 
+.profile-summary h2 {
+    font-size: 18px;
+    color: #0f172a;
+}
+ 
+.profile-summary .summary-sub {
+    margin: 4px 0 12px;
+    font-size: 13px;
+    color: #6b7280;
+}
+ 
+.summary-list {
+    list-style: none;
+    margin: 18px 0;
+    text-align: left;
+}
+ 
+.summary-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+ 
+.summary-list li span:first-child {
+    color: #6b7280;
+}
+ 
+.summary-list li span:last-child {
+    font-weight: 700;
+    text-align: right;
+}
+ 
+.stack-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+ 
+.stack-buttons .action-button {
+    justify-content: center;
+}
+ 
+.photo-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+ 
+.photo-row input[type="file"] {
+    padding: 8px;
+    font-size: 13px;
+}
+ 
+/* ---------- Schedule editor ---------- */
+.doctor-switch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+ 
+.doctor-switch select {
+    min-width: 260px;
+}
+ 
+.hours-table {
+    min-width: 760px;
+}
+ 
+.hours-table .time-input {
+    width: 118px;
+    padding: 8px 10px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+}
+ 
+.hours-table .time-input:focus {
+    border-color: #1677ff;
+}
+ 
+.hours-table .time-input:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+}
+ 
+.hours-table .day-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+ 
+.hours-table .day-cell input {
+    width: 16px;
+    height: 16px;
+}
+ 
+.time-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #6b7280;
+}
+ 
+.slot-count {
+    font-size: 13px;
+    color: #374151;
+    white-space: nowrap;
+}
+ 
+.row-error {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #dc2626;
+}
+ 
+.inline-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+ 
+.inline-fields .field {
+    min-width: 150px;
+}
+ 
+.message-box {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+ 
+.message-box.show {
+    display: block;
+}
+ 
+.message-box.success {
+    background-color: #f0fdf4;
+    border-left: 4px solid #22c55e;
+    color: #14532d;
+}
+ 
+.message-box.warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    color: #78350f;
+}
+ 
+.message-box.error {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+    color: #7f1d1d;
+}
+ 
+.message-box a {
+    font-weight: 700;
+    color: inherit;
+}
+
+/* ---------- Profile form ---------- */
+.form-section-title {
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    color: rgb(0, 6, 116);
+}
+ 
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+ 
+.form-grid .full {
+    grid-column: 1 / -1;
+}
+ 
+.required {
+    color: #dc2626;
+}
+ 
+.form-error {
+    display: none;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #dc2626;
+}
+ 
+.field.invalid input,
+.field.invalid select {
+    border-color: #ef4444;
+}
+ 
+.field.invalid .form-error {
+    display: block;
+}
+ 
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #374151;
+}
+ 
+.check-row input {
+    width: 16px;
+    height: 16px;
+}
+ 
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+ 
+.action-button.danger {
+    background-color: #ef4444;
+}
+ 
+.action-button.danger:hover {
+    background-color: #dc2626;
+}

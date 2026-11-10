@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Utilisation - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Analytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Doctor Utilisation</h1>
+                    <p>How much of each doctor's available consultation time is booked.</p>
+                </div>
+            </div>
+ 
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="period">Period</label>
+                        <select id="period">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="dept">Department</label>
+                        <select id="dept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                </div>
+            </section>
+ 
+            <section class="summary-grid">
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                    <div>
+                        <div class="summary-value" id="cAvg">-</div>
+                        <div class="summary-label" id="cAvgLabel">Average utilisation</div>
+                    </div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <div class="summary-value" id="cHigh">-</div>
+                        <div class="summary-label" id="cHighLabel">Most utilised</div>
+                    </div>
+                </div>
+                <div class="summary-card warning">
+                    <div class="summary-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div>
+                        <div class="summary-value" id="cLow">-</div>
+                        <div class="summary-label" id="cLowLabel">Least utilised</div>
+                    </div>
+                </div>
+                <div class="summary-card danger">
+                    <div class="summary-icon"><i class="fa-solid fa-ban"></i></div>
+                    <div>
+                        <div class="summary-value" id="cLost">-</div>
+                        <div class="summary-label" id="cLostLabel">Slots lost to OT or leave</div>
+                    </div>
+                </div>
+            </section>
+ 
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Slot breakdown by doctor</h2>
+                        <span class="date-label" id="rangeLabel"></span>
+                    </div>
+                    <div id="stackRows"></div>
+ 
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #1677ff;"></span> Booked</span>
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #cbd5e1;"></span> Free</span>
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #a78bfa;"></span> Blocked by OT or leave</span>
+                    </div>
+                </div>
+ 
+                <div class="panel">
+                    <div class="panel-header"><h2>What this suggests</h2></div>
+                    <ul class="insight-list" id="insights"></ul>
+                </div>
+            </section>
+ 
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Utilisation by doctor</h2>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Available slots</th>
+                                <th>Booked</th>
+                                <th>Free</th>
+                                <th>Blocked (OT or leave)</th>
+                                <th>Utilisation</th>
+                                <th>Load</th>
+                            </tr>
+                        </thead>
+                        <tbody id="utilRows"></tbody>
+                    </table>
+                </div>
+ 
+                <p class="method-note" style="margin-top: 14px;">
+                    Utilisation = booked slots / available slots. Available slots are the doctor's consultation slots minus time blocked
+                    for OT, leave or other unavailability. A cancelled appointment frees its slot again.
+                    Load: under 50% is underused, 50% to 85% is healthy, over 85% is high.
+                </p>
+            </section>
+ 
+        </main>
+    </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Analytics.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+        const esc = AMS_UI.esc;
+ 
+        let ticket = 0;
+ 
+        function fillDepartments() {
+            el("dept").innerHTML = '<option value="">All departments</option>' +
+                AMS.getDepartments().map(d => "<option>" + esc(d.name) + "</option>").join("");
+        }
+ 
+        function render(list, range) {
+            el("rangeLabel").textContent = AMS.formatDate(range.dateFrom) + " to " + AMS.formatDate(range.dateTo);
+ 
+            const rows = (list || []).map(r => {
+                const booked = Number(r.bookedSlots) || 0;
+                const free = Number(r.freeSlots) || 0;
+                const blocked = Number(r.blockedSlots) || 0;
+                const available = r.availableSlots !== undefined ? Number(r.availableSlots) : booked + free;
+                const pct = r.utilisationPercent !== undefined ? Number(r.utilisationPercent) : AMS.utilisationPercent(booked, available);
+ 
+                return { id: r.doctorId, name: r.doctorName, dept: r.department, booked, free, blocked, available, total: booked + free + blocked, pct };
+            });
+ 
+            if (!rows.length) {
+                ["cAvg", "cHigh", "cLow", "cLost"].forEach(id => { el(id).textContent = "None"; el(id + "Label").textContent = "No doctors for this selection"; });
+                el("stackRows").innerHTML = '<p class="method-note">No data for this period.</p>';
+                el("utilRows").innerHTML = '<tr><td colspan="8">No data for this period.</td></tr>';
+                el("insights").innerHTML = "";
+                return;
+            }
+ 
+            /* ----- cards ----- */
+            const sumBooked = rows.reduce((s, x) => s + x.booked, 0);
+            const sumAvail = rows.reduce((s, x) => s + x.available, 0);
+            const sumBlocked = rows.reduce((s, x) => s + x.blocked, 0);
+            const sorted = rows.slice().sort((a, b) => b.pct - a.pct);
+            const hi = sorted[0], lo = sorted[sorted.length - 1];
+ 
+            el("cAvg").textContent = AMS.utilisationPercent(sumBooked, sumAvail) + "%";
+            el("cAvgLabel").textContent = "Average utilisation, " + sumBooked + " of " + sumAvail + " slots";
+            el("cHigh").textContent = hi.name;
+            el("cHighLabel").textContent = "Most utilised, " + hi.pct + "%";
+            el("cLow").textContent = lo.name;
+            el("cLowLabel").textContent = "Least utilised, " + lo.pct + "%";
+            el("cLost").textContent = sumBlocked;
+            el("cLostLabel").textContent = "Slots lost to OT or leave";
+ 
+            /* ----- stacked bars ----- */
+            el("stackRows").innerHTML = rows.map(x => {
+                const w = n => (x.total ? n / x.total * 100 : 0).toFixed(1);
+ 
+                return '<div class="stack-row">' +
+                    '<div class="progress-meta"><span>' + esc(x.name) + '</span><strong>' + x.pct + '% utilised</strong></div>' +
+                    '<div class="stack-track" title="Booked ' + x.booked + ", free " + x.free + ", blocked " + x.blocked + '">' +
+                    '<div class="stack-seg booked" style="width:' + w(x.booked) + '%;"></div>' +
+                    '<div class="stack-seg free" style="width:' + w(x.free) + '%;"></div>' +
+                    '<div class="stack-seg blocked" style="width:' + w(x.blocked) + '%;"></div></div></div>';
+            }).join("");
+ 
+            /* ----- table ----- */
+            el("utilRows").innerHTML = sorted.map(x => {
+                const l = AMS.utilisationLoad(x.pct);
+ 
+                return "<tr>" +
+                    "<td>" + esc(x.name) + '<span class="cell-sub">' + esc(x.id) + "</span></td>" +
+                    "<td>" + esc(x.dept) + "</td>" +
+                    "<td>" + x.available + "</td>" +
+                    "<td>" + x.booked + "</td>" +
+                    "<td>" + x.free + "</td>" +
+                    "<td>" + x.blocked + "</td>" +
+                    '<td><div class="util-cell"><div class="progress-track"><div class="progress-fill ' + l.bar + '" style="width:' + Math.min(100, x.pct) + '%;"></div></div><strong>' + x.pct + "%</strong></div></td>" +
+                    '<td><span class="badge ' + l.badge + '">' + l.label + "</span></td>" +
+                    "</tr>";
+            }).join("");
+ 
+            /* ----- insights ----- */
+            const over = rows.filter(x => x.pct > 85);
+            const under = rows.filter(x => x.pct < 50);
+            const worstBlocked = rows.slice().sort((a, b) => b.blocked - a.blocked)[0];
+            const out = [];
+ 
+            if (over.length) out.push(["fa-arrow-trend-up", over.map(x => esc(x.name)).join(", ") + (over.length > 1 ? " are" : " is") + " above 85% utilised. Patients may struggle to find a slot, so consider adding sessions."]);
+            if (under.length) out.push(["fa-arrow-trend-down", under.map(x => esc(x.name)).join(", ") + (under.length > 1 ? " are" : " is") + " below 50% utilised. Review their hours or promote their services."]);
+            if (worstBlocked && worstBlocked.blocked > 0) out.push(["fa-ban", esc(worstBlocked.name) + " lost " + worstBlocked.blocked + " slots to OT or leave, the most of any doctor. Plan these blocks ahead so patients can be moved early."]);
+            if (over.length && under.length && over[0].dept === under[0].dept) out.push(["fa-right-left", "Both busy and quiet doctors work in " + esc(over[0].dept) + ". Directing new bookings to " + esc(under[0].name) + " would balance the load."]);
+            if (!out.length) out.push(["fa-circle-check", "All doctors are in the healthy range for this period."]);
+ 
+            el("insights").innerHTML = out.map(i => '<li><i class="fa-solid ' + i[0] + '"></i><span>' + i[1] + "</span></li>").join("");
+        }
+ 
+        async function load() {
+            const range = AMS.getPeriodRange(Number(el("period").value));
+            const mine = ++ticket;
+ 
+            try {
+                const data = await AMS.loadDoctorUtilisation({
+                    dateFrom: range.dateFrom,
+                    dateTo: range.dateTo,
+                    department: el("dept").value
+                });
+ 
+                if (mine !== ticket) return;
+                AMS_UI.clearMessage();
+                render(Array.isArray(data) ? data : (data && data.items) || [], range);
+            } catch (error) {
+                if (mine === ticket) AMS_UI.showError(error);
+            }
+        }
+ 
+        el("period").addEventListener("change", load);
+        el("dept").addEventListener("change", load);
+ 
+        (async function init() {
+            if (!AMS_UI.initPage()) return;
+ 
+            try {
+                await AMS.loadDepartments();
+                fillDepartments();
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            load();
+        })();
+    </script>
+
+</body>
+</html>

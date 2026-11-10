@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Profile - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+        <link rel="stylesheet" href="Doctors.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1 id="pageTitle">Add doctor</h1>
+                    <p id="pageSubtitle">Create a doctor profile. Set consultation hours after saving.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="Doctors.html" class="action-button secondary"><i class="fa-solid fa-arrow-left"></i> Back to doctors</a>
+                </div>
+            </div>
+ 
+            <!-- Connect this form to your backend: set action and method, then save
+                 the posted values to the Doctor table. -->
+            <form class="panel-grid" id="doctorForm" method="post" action="" enctype="multipart/form-data" novalidate>
+ 
+                <!-- Left: profile fields -->
+                <div class="panel">
+ 
+                    <h2 class="form-section-title">Basic information</h2>
+                    <div class="form-grid" style="margin-bottom: 26px;">
+                        <div class="field">
+                            <label for="doctorId">Doctor ID</label>
+                            <input type="text" id="doctorId" name="doctorId" value="Assigned on save" readonly>
+                        </div>
+ 
+                        <div class="field">
+                            <label for="fullName">Full name <span class="required">*</span></label>
+                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Dr. Ahmad Faris">
+                            <div class="form-error">Enter the doctor's name.</div>
+                        </div>
+ 
+                        <div class="field">
+                            <label for="department">Department <span class="required">*</span></label>
+                            <select id="department" name="department">
+                                <option value="">Select department</option>
+                                <option>General Medicine</option>
+                                <option>Cardiology</option>
+                                <option>Orthopaedics</option>
+                                <option>Paediatrics</option>
+                                <option>Dermatology</option>
+                            </select>
+                            <div class="form-error">Select a department.</div>
+                        </div>
+ 
+                        <div class="field">
+                            <label for="specialty">Specialty <span class="required">*</span></label>
+                            <input type="text" id="specialty" name="specialty" placeholder="e.g. Cardiologist">
+                            <div class="form-error">Enter the specialty.</div>
+                        </div>
+ 
+                        <div class="field full">
+                            <label for="qualifications">Qualifications</label>
+                            <input type="text" id="qualifications" name="qualifications" placeholder="e.g. MBBS, MRCP, Fellowship in Interventional Cardiology">
+                        </div>
+ 
+                        <div class="field">
+                            <label for="experience">Years of experience</label>
+                            <input type="number" id="experience" name="experience" min="0" max="60">
+                        </div>
+ 
+                        <div class="field">
+                            <label for="languages">Languages spoken</label>
+                            <input type="text" id="languages" name="languages" placeholder="e.g. English, Malay, Mandarin">
+                        </div>
+ 
+                        <div class="field">
+                            <label for="room">Consultation room</label>
+                            <input type="text" id="room" name="room" placeholder="e.g. Room 3B">
+                        </div>
+ 
+                        <div class="field">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option>Active</option>
+                                <option>On leave</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+ 
+                        <div class="field full">
+                            <label for="photo">Profile photo</label>
+                            <div class="photo-row">
+                                <div class="avatar large" id="photoPreview">?</div>
+                                <input type="file" id="photo" name="photo" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <h2 class="form-section-title">Contact</h2>
+                    <div class="form-grid" style="margin-bottom: 26px;">
+                        <div class="field">
+                            <label for="phone">Phone <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" placeholder="e.g. 012-3456789">
+                            <div class="form-error">Enter a phone number.</div>
+                        </div>
+ 
+                        <div class="field">
+                            <label for="email">Email <span class="required">*</span></label>
+                            <input type="email" id="email" name="email">
+                            <div class="form-error">Enter a valid email address.</div>
+                        </div>
+                    </div>
+ 
+                    <h2 class="form-section-title">About</h2>
+                    <div class="field">
+                        <label for="bio">Short biography</label>
+                        <textarea id="bio" name="bio" placeholder="Areas of interest, services offered and so on"></textarea>
+                    </div>
+ 
+                    <div class="form-actions" style="margin-top: 22px;">
+                        <button type="submit" class="action-button"><i class="fa-solid fa-floppy-disk"></i> Save doctor</button>
+                        <a href="Doctors.html" class="action-button secondary">Cancel</a>
+                    </div>
+                </div>
+ 
+                <!-- Right: summary -->
+                <div class="panel profile-summary">
+                    <div class="avatar large" id="summaryAvatar">?</div>
+                    <h2 id="summaryName">New doctor</h2>
+                    <div class="summary-sub" id="summaryRole">Department and specialty</div>
+                    <span class="badge badge-duty" id="summaryBadge">Active</span>
+ 
+                    <ul class="summary-list">
+                        <li><span>Doctor ID</span><span id="summaryId">Not assigned yet</span></li>
+                        <li><span>Upcoming appointments</span><span id="summaryUpcoming">0</span></li>
+                        <li><span>Consultation room</span><span id="summaryRoom">Not set</span></li>
+                    </ul>
+ 
+                    <div class="stack-buttons" id="summaryActions">
+                        <div class="slot-hint" style="margin: 0;">Consultation hours, OT and leave can be set after the profile is saved.</div>
+                    </div>
+                </div>
+ 
+            </form>
+ 
+        </main>
+    </div>
+ 
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+        const esc = AMS_UI.esc;
+        const params = new URLSearchParams(location.search);
+        const editId = params.get("id");
+ 
+        let existing = null;
+        let photoUrl = "";       // preview of a newly chosen photo
+        let savedPhotoUrl = "";  // photo already stored on the server
+ 
+        /* ---------- Avatar and summary ---------- */
+        function setAvatar(node, text) {
+            const url = photoUrl || savedPhotoUrl;
+ 
+            if (url) {
+                node.style.backgroundImage = "url('" + url.replace(/'/g, "%27") + "')";
+                node.textContent = "";
+            } else {
+                node.style.backgroundImage = "";
+                node.textContent = text;
+            }
+        }
+ 
+        function refreshSummary() {
+            const name = el("fullName").value.trim();
+            const department = el("department").value;
+            const specialty = el("specialty").value.trim();
+            const status = el("status").value;
+            const initials = name ? AMS.getDoctorInitials(name) : "?";
+ 
+            el("summaryName").textContent = name || "New doctor";
+            el("summaryRole").textContent = [specialty, department].filter(Boolean).join(", ") || "Department and specialty";
+            el("summaryRoom").textContent = el("room").value.trim() || "Not set";
+            el("summaryBadge").textContent = status;
+            el("summaryBadge").className = "badge " + AMS.getDoctorStatusBadge(status);
+ 
+            setAvatar(el("summaryAvatar"), initials);
+            setAvatar(el("photoPreview"), initials);
+        }
+ 
+        ["fullName", "department", "specialty", "status", "room"].forEach(id => {
+            el(id).addEventListener("input", refreshSummary);
+            el(id).addEventListener("change", refreshSummary);
+        });
+ 
+        el("photo").addEventListener("change", () => {
+            const file = el("photo").files[0];
+            if (!file) return;
+ 
+            if (photoUrl) URL.revokeObjectURL(photoUrl);
+            photoUrl = URL.createObjectURL(file);
+            refreshSummary();
+        });
+ 
+        /* ---------- Form ---------- */
+        function gatherInput() {
+            return {
+                name: el("fullName").value.trim(),
+                department: el("department").value,
+                specialty: el("specialty").value.trim(),
+                qualifications: el("qualifications").value.trim(),
+                experienceYears: el("experience").value === "" ? null : Number(el("experience").value),
+                languages: el("languages").value.trim(),
+                room: el("room").value.trim(),
+                status: el("status").value,
+                phone: el("phone").value.trim(),
+                email: el("email").value.trim(),
+                bio: el("bio").value.trim()
+            };
+        }
+ 
+        function setInvalid(id, invalid) {
+            el(id).closest(".field").classList.toggle("invalid", Boolean(invalid));
+        }
+ 
+        el("doctorForm").addEventListener("submit", async e => {
+            e.preventDefault();
+ 
+            const input = gatherInput();
+            const check = AMS.validateDoctorInput(input);
+ 
+            setInvalid("fullName", check.errors.name);
+            setInvalid("department", check.errors.department);
+            setInvalid("specialty", check.errors.specialty);
+            setInvalid("phone", check.errors.phone);
+            setInvalid("email", check.errors.email);
+ 
+            if (!check.valid) {
+                const first = document.querySelector(".field.invalid");
+                if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+ 
+            const button = document.querySelector("#doctorForm button[type='submit']");
+            button.disabled = true;
+ 
+            const result = existing
+                ? await AMS.updateDoctor(existing.id, input)
+                : await AMS.createDoctor(input);
+ 
+            if (!result.success) {
+                button.disabled = false;
+                AMS_UI.message("error", result.message);
+                return;
+            }
+ 
+            // The photo is uploaded separately after the profile is saved
+            const file = el("photo").files[0];
+            let photoNote = "";
+ 
+            if (file) {
+                const upload = await AMS.uploadDoctorPhoto(result.doctor.id, file);
+                if (!upload.success) photoNote = " The profile was saved, but the photo could not be uploaded: " + upload.message;
+            }
+ 
+            if (existing) {
+                AMS_UI.message(photoNote ? "warning" : "success", "Doctor updated." + photoNote);
+                setTimeout(() => { location.href = "Doctors.html"; }, photoNote ? 2500 : 900);
+            } else {
+                AMS_UI.message(photoNote ? "warning" : "success",
+                    result.doctor.name + " was added. Next, set their consultation hours." + photoNote);
+                setTimeout(() => {
+                    location.href = "DoctorSchedule.html?id=" + encodeURIComponent(result.doctor.id);
+                }, photoNote ? 2500 : 1200);
+            }
+        });
+ 
+        /* ---------- Start ---------- */
+        (async function init() {
+            AMS_UI.initPage();
+ 
+            try {
+                await AMS.loadDepartments();
+                if (editId) existing = await AMS.fetchDoctor(editId);
+            } catch (error) {
+                AMS_UI.showError(error);
+ 
+                if (editId && !existing) {
+                    document.querySelector("#doctorForm button[type='submit']").disabled = true;
+                    return;
+                }
+            }
+ 
+            el("department").innerHTML =
+                '<option value="">Select department</option>' +
+                AMS.getDepartments().map(d => "<option>" + esc(d.name) + "</option>").join("");
+ 
+            if (existing) {
+                el("pageTitle").textContent = "Edit doctor " + existing.id;
+                el("pageSubtitle").textContent = "Update the profile, status and contact details.";
+ 
+                el("doctorId").value = existing.id;
+                el("fullName").value = existing.name || "";
+                el("department").value = existing.department || "";
+                el("specialty").value = existing.specialty || "";
+                el("qualifications").value = existing.qualifications || "";
+                el("experience").value = existing.experienceYears === null || existing.experienceYears === undefined ? "" : existing.experienceYears;
+                el("languages").value = existing.languages || "";
+                el("room").value = existing.room || "";
+                el("status").value = existing.status || "Active";
+                el("phone").value = existing.phone || "";
+                el("email").value = existing.email || "";
+                el("bio").value = existing.bio || "";
+ 
+                savedPhotoUrl = AMS_UI.assetUrl(existing.photoUrl);
+ 
+                el("summaryId").textContent = existing.id;
+                el("summaryUpcoming").textContent = existing.upcomingAppointments || 0;
+ 
+                el("summaryActions").innerHTML =
+                    '<a href="DoctorSchedule.html?id=' + encodeURIComponent(existing.id) + '" class="action-button"><i class="fa-solid fa-clock"></i> Manage schedule</a>' +
+                    '<a href="Appointments.html" class="action-button secondary"><i class="fa-solid fa-calendar-days"></i> View appointments</a>';
+            }
+ 
+            refreshSummary();
+        })();
+    </script>
+
+</body>
+</html>

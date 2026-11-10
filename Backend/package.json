@@ -1,0 +1,28 @@
+{
+  "name": "hospital-appoinment-and-queue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ams-api.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnthonyVK05/Hospital-Appoinment-and-Queue.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AnthonyVK05/Hospital-Appoinment-and-Queue/issues"
+  },
+  "homepage": "https://github.com/AnthonyVK05/Hospital-Appoinment-and-Queue#readme",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

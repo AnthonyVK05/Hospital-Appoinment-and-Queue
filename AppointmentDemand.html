@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Demand - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Analytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <h1>Appointment & Doctor Management</h1>
+ 
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <a href="login.html" class="logout-button">Logout</a>
+        </div>
+    </header>
+ 
+    <div class="page-layout">
+ 
+        <!-- Sidebar -->
+        <aside class="sidebar">
+ 
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html" class="active">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+ 
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                    </ul>
+                </li>
+ 
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Appointment Demand</h1>
+                    <p>Which departments and doctors patients book the most, and how demand changes over time.</p>
+                </div>
+            </div>
+ 
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="period">Period</label>
+                        <select id="period">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="dept">Department</label>
+                        <select id="dept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                </div>
+            </section>
+ 
+            <section class="summary-grid">
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div>
+                        <div class="summary-value" id="cTotal">-</div>
+                        <div class="summary-label" id="cTotalLabel">Total appointments</div>
+                    </div>
+                </div>
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="summary-value" id="cAvg">-</div>
+                        <div class="summary-label" id="cAvgLabel">Average per day</div>
+                    </div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-icon"><i class="fa-solid fa-building"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDept">-</div>
+                        <div class="summary-label" id="cDeptLabel">Busiest department</div>
+                    </div>
+                </div>
+                <div class="summary-card warning">
+                    <div class="summary-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDoctor">-</div>
+                        <div class="summary-label" id="cDoctorLabel">Busiest doctor</div>
+                    </div>
+                </div>
+            </section>
+ 
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 id="trendTitle">Appointments over time</h2>
+                    </div>
+                    <div class="chart-box" id="trendChart"></div>
+                </div>
+ 
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Demand by department</h2>
+                    </div>
+                    <div id="deptBars"></div>
+                </div>
+            </section>
+ 
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Demand by doctor</h2>
+                    <span class="date-label" id="rangeLabel"></span>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Appointments</th>
+                                <th>Share of demand</th>
+                                <th>Vs previous period</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorRows"></tbody>
+                    </table>
+                </div>
+ 
+                <p class="method-note" style="margin-top: 14px;">
+                    Demand counts every appointment that was booked and not cancelled (Completed, No-show and Booked).
+                </p>
+            </section>
+ 
+        </main>
+    </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Analytics.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+ 
+        let ticket = 0;   // ignores answers that arrive after a newer request
+ 
+        function fillDepartments() {
+            el("dept").innerHTML = '<option value="">All departments</option>' +
+                AMS.getDepartments().map(d => "<option>" + AMS_UI.esc(d.name) + "</option>").join("");
+        }
+ 
+        function topOf(list, key) {
+            return list.slice().sort((a, b) => b[key] - a[key])[0];
+        }
+ 
+        function render(data, days) {
+            const total = data.total || 0;
+            const byDept = data.byDepartment || [];
+            const byDoc = data.byDoctor || [];
+            const range = AMS.getPeriodRange(days);
+ 
+            el("rangeLabel").textContent = AMS.formatDate(range.dateFrom) + " to " + AMS.formatDate(range.dateTo);
+ 
+            /* ----- cards ----- */
+            el("cTotal").textContent = total;
+            el("cTotalLabel").innerHTML = "Total appointments<br>" + Charts.change(total, data.previousTotal || 0);
+            el("cAvg").textContent = Number(data.averagePerDay || 0).toFixed(1);
+            el("cAvgLabel").textContent = "Average per day";
+ 
+            const topDept = byDept.length ? topOf(byDept, "count") : null;
+            const topDoc = byDoc.length ? topOf(byDoc, "count") : null;
+ 
+            el("cDept").textContent = topDept ? topDept.name : "None";
+            el("cDeptLabel").textContent = topDept ? "Busiest department, " + topDept.count + " appointments" : "Busiest department";
+            el("cDoctor").textContent = topDoc ? topDoc.doctorName : "None";
+            el("cDoctorLabel").textContent = topDoc ? "Busiest doctor, " + topDoc.count + " appointments" : "Busiest doctor";
+ 
+            /* ----- trend (daily up to 30 days, weekly for 90) ----- */
+            const trend = data.trend || [];
+            el("trendTitle").textContent = days > 30 ? "Appointments per week" : "Appointments per day";
+            Charts.line(el("trendChart"), trend.map(t => t.label || AMS.formatDate(t.date)), trend.map(t => t.count), "Appointments over time");
+ 
+            /* ----- department bars ----- */
+            const deptItems = byDept.slice().sort((a, b) => b.count - a.count).map(d => ({
+                label: d.name, value: d.count, text: d.count + " (" + (total ? Math.round(d.count / total * 100) : 0) + "%)"
+            }));
+ 
+            if (deptItems.length) Charts.hbars(el("deptBars"), deptItems);
+            else el("deptBars").innerHTML = '<p class="method-note">No appointments in this period.</p>';
+ 
+            /* ----- doctor table ----- */
+            const docs = byDoc.slice().sort((a, b) => b.count - a.count);
+            const maxDoc = Math.max(1, ...docs.map(d => d.count));
+            const esc = AMS_UI.esc;
+ 
+            el("doctorRows").innerHTML = docs.length ? docs.map((d, i) => {
+                const share = total ? Math.round(d.count / total * 100) : 0;
+ 
+                return "<tr>" +
+                    "<td>" + (i + 1) + "</td>" +
+                    "<td>" + esc(d.doctorName) + '<span class="cell-sub">' + esc(d.doctorId) + "</span></td>" +
+                    "<td>" + esc(d.department) + "</td>" +
+                    "<td><strong>" + esc(d.count) + "</strong></td>" +
+                    '<td><div class="util-cell"><div class="progress-track"><div class="progress-fill" style="width:' + (d.count / maxDoc * 100).toFixed(1) + '%;"></div></div><strong>' + share + "%</strong></div></td>" +
+                    "<td>" + Charts.change(d.count, d.previousCount || 0).replace(" vs previous period", "") + "</td>" +
+                    "</tr>";
+            }).join("") : '<tr><td colspan="6">No appointments in this period.</td></tr>';
+        }
+ 
+        async function load() {
+            const days = Number(el("period").value);
+            const range = AMS.getPeriodRange(days);
+            const mine = ++ticket;
+ 
+            try {
+                const data = await AMS.loadAppointmentDemand({
+                    dateFrom: range.dateFrom,
+                    dateTo: range.dateTo,
+                    department: el("dept").value,
+                    groupBy: days > 30 ? "week" : "day"
+                });
+ 
+                if (mine !== ticket) return;
+                AMS_UI.clearMessage();
+                render(data || {}, days);
+            } catch (error) {
+                if (mine === ticket) AMS_UI.showError(error);
+            }
+        }
+ 
+        el("period").addEventListener("change", load);
+        el("dept").addEventListener("change", load);
+ 
+        (async function init() {
+            if (!AMS_UI.initPage()) return;
+ 
+            try {
+                await AMS.loadDepartments();
+                fillDepartments();
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            load();
+        })();
+    </script>
+
+</body>
+</html>

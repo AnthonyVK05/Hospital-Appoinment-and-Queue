@@ -1,0 +1,131 @@
+/* ================================================================
+   Analytics pages: line chart, heatmap, stacked bars, insights
+   ================================================================ */
+ 
+.chart-box svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+ 
+.trend-up   { color: #15803d; font-weight: 700; }
+.trend-down { color: #b91c1c; font-weight: 700; }
+.trend-flat { color: #6b7280; font-weight: 700; }
+ 
+/* ---------- Heatmap ---------- */
+.heatmap {
+    display: grid;
+    gap: 4px;
+    min-width: 520px;
+}
+ 
+.heat-colhead {
+    padding-bottom: 4px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+}
+ 
+.heat-label {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+ 
+.heat-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+ 
+.heat-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #6b7280;
+}
+ 
+.heat-gradient {
+    width: 140px;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(22, 119, 255, 0.08), rgba(22, 119, 255, 1));
+}
+ 
+/* ---------- Stacked utilisation bars ---------- */
+.stack-row {
+    margin-bottom: 16px;
+}
+ 
+.stack-row:last-child {
+    margin-bottom: 0;
+}
+ 
+.stack-track {
+    display: flex;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: #e2e8f0;
+}
+ 
+.stack-seg.booked  { background-color: #1677ff; }
+.stack-seg.free    { background-color: #cbd5e1; }
+.stack-seg.blocked { background-color: #a78bfa; }
+ 
+.util-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 170px;
+}
+ 
+.util-cell .progress-track {
+    flex: 1;
+}
+ 
+.util-cell strong {
+    min-width: 40px;
+    text-align: right;
+}
+ 
+/* ---------- Insights ---------- */
+.insight-list {
+    list-style: none;
+}
+ 
+.insight-list li {
+    display: flex;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #374151;
+}
+ 
+.insight-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+ 
+.insight-list i {
+    width: 18px;
+    padding-top: 2px;
+    text-align: center;
+    color: #1677ff;
+}
+ 
+.method-note {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #6b7280;
+}
