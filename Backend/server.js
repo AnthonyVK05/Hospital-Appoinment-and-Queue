@@ -16,9 +16,6 @@ const { verifyToken } = require('./middleware/authMiddleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Frontend files are stored in the parent directory
-const frontendPath = path.join(__dirname, '..');
-
 // Security headers (X-Content-Type-Options, X-Frame-Options, ...)
 app.use(helmet());
 
@@ -32,7 +29,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     setHeaders: res => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
 }));
 
-
+// Backend homepage
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Hospital Analytics API is running!',
+        api: 'analytic-api',
+        endpoints: {
+            health: '/api/health',
+            doctors: '/api/doctors',
+            appointments: '/api/appointments',
+            departments: '/api/departments',
+            auth: '/api/auth',
+            dashboard: '/api/dashboard',
+            analytics: '/api/analytics'
+        }
+    });
+});
  
 /* ------------------------------------------------------------------ */
 /* Middleware                                                          */
@@ -150,32 +163,6 @@ if (fs.existsSync(routesDir)) {
     console.error("Routes folder not found:", routesDir);
 
 }
-
-/* ------------------------------------------------------------------ */
-/* Frontend Hosting                                                    */
-/* ------------------------------------------------------------------ */
-
-// Prevent public access to backend source files
-app.use((req, res, next) => {
-    if (/^\/backend(?:\/|$)/i.test(req.path)) {
-        return res.sendStatus(404);
-    }
-
-    next();
-});
-
-// Serve frontend HTML, CSS, JavaScript and images
-app.use(express.static(frontendPath, {
-    index: false,
-    dotfiles: 'deny'
-}));
-
-// Main website homepage
-app.get('/', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'login.html'));
-});
-
-console.log('Frontend directory:', frontendPath);
  
 /* ------------------------------------------------------------------ */
 /* Errors                                                              */
