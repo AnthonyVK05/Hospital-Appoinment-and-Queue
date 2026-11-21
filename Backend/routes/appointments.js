@@ -25,9 +25,11 @@ const db = require("../config/database");
 const pool = db.pool || db;
 
 const { getSlots, TIME_ZONE } = require("../lib/slots");
+const { DB_STATUS, OPEN_DB, uiStatusSql } = require("../lib/status");
 
-const OPEN_STATUSES = ["Booked", "Rescheduled"];
-const OPEN_SQL = OPEN_STATUSES.map(s => `'${s}'`).join(", ");
+// Stored statuses AMS may still edit, cancel or close.
+const OPEN_SQL = OPEN_DB.map(s => `'${s}'`).join(", ");
+const UI_STATUS = uiStatusSql("a");
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_ONLY = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -79,7 +81,7 @@ const SLOT_SQL = `(COALESCE(
 
 // An open, upcoming appointment that overlaps an OT / leave / other block.
 const CONFLICT_SQL = `(
-    a.status IN (${OPEN_SQL})
+    UPPER(a.status) IN (${OPEN_SQL})
     AND a.scheduled_at >= now()
     AND EXISTS (
         SELECT 1
@@ -92,10 +94,11 @@ const CONFLICT_SQL = `(
 
 const FROM_SQL = `
     FROM appointments a
-    JOIN patients    p   ON p.id   = a.patient_id
+    LEFT JOIN patients p ON p.id   = a.patient_id
     JOIN departments dep ON dep.id = a.department_id
     LEFT JOIN doctors d  ON d.doctor_id = a.doctor_id
 `;
+
 
 const APPT_COLUMNS = `
     COALESCE(a.external_appointment_id, a.id::text) AS id,
@@ -103,18 +106,19 @@ const APPT_COLUMNS = `
     p.full_name                                     AS patient_name,
     p.email                                         AS email,
     NULL::text                                      AS phone,
-    dep.department_name                             AS department,
+    dep.department_name                            AS department,
     a.doctor_id                                     AS doctor_id,
     d.full_name                                     AS doctor_name,
     to_char(a.scheduled_at AT TIME ZONE '${TIME_ZONE}', 'YYYY-MM-DD')
                                                     AS date,
     to_char(a.scheduled_at AT TIME ZONE '${TIME_ZONE}', 'HH24:MI')
                                                     AS time,
-    a.status                                        AS status,
+    ${UI_STATUS}                                    AS status,
     a.notes                                         AS notes,
     NULL::text                                      AS cancel_reason,
     ${CONFLICT_SQL}                                 AS has_conflict
 `;
+
 
 const BY_REF = "(a.external_appointment_id = $1 OR a.id::text = $1)";
 
@@ -188,7 +192,7 @@ router.get("/", async (req, res) => {
 
         if (req.query.status) {
             values.push(req.query.status);
-            where.push(`a.status = $${values.length}`);
+            where.push(`${UI_STATUS} = $${values.length}`);
         }
 
         if (req.query.department) {
@@ -422,8 +426,6 @@ router.post("/", async (req, res) => {
         const body = req.body;
         const patientNumber = String(body.patientId).trim();
         const patientName = String(body.patientName).trim();
-        const email = String(body.email || "").trim() || null;
-        const phone = String(body.phone || "").trim() || null;
         const notes = String(body.notes || "").trim() || null;
 
         const created = await inTransaction(async client => {
@@ -464,7 +466,7 @@ router.post("/", async (req, res) => {
                  VALUES ($1, $2, $3, $4,
                          (($5::date + $6::time)::timestamp
                           AT TIME ZONE '${TIME_ZONE}'),
-                         'Booked', $7, $8, now(), now())
+                         $9, $7, $8, now(), now())
                  RETURNING external_appointment_id`,
                 [
                     makeAppointmentId(departmentCode, number),
@@ -474,7 +476,8 @@ router.post("/", async (req, res) => {
                     body.date,
                     body.time,
                     notes,
-                    phone
+                    phone,
+                    DB_STATUS["Booked"]
                 ]
             );
 
@@ -507,7 +510,6 @@ router.put("/:id", async (req, res) => {
 
     try {
         const body = req.body;
-        const phone = String(body.phone || "").trim() || null;
         const notes = String(body.notes || "").trim() || null;
 
         const ref = await inTransaction(async client => {
@@ -515,6 +517,7 @@ router.put("/:id", async (req, res) => {
                 `SELECT a.id,
                         a.external_appointment_id,
                         a.status,
+                        ${UI_STATUS} AS ui_status,
                         a.doctor_id,
                         to_char(a.scheduled_at AT TIME ZONE '${TIME_ZONE}',
                                 'YYYY-MM-DD') AS date,
@@ -532,10 +535,10 @@ router.put("/:id", async (req, res) => {
 
             const current = found.rows[0];
 
-            if (!OPEN_STATUSES.includes(current.status)) {
+            if (!OPEN_DB.includes(String(current.status).toUpperCase())) {
                 throw new HttpError(
                     409,
-                    "This appointment is " + current.status.toLowerCase() +
+                    "This appointment is " + current.ui_status.toLowerCase() +
                     " and can no longer be changed."
                 );
             }
@@ -561,26 +564,24 @@ router.put("/:id", async (req, res) => {
 
             await client.query(
                 `UPDATE appointments
-                 SET department_id = $2,
-                     doctor_id     = $3,
-                     scheduled_at  = (($4::date + $5::time)::timestamp
-                                      AT TIME ZONE '${TIME_ZONE}'),
-                     status        = $6,
-                     notes         = $7,
-                     contact_phone = $8,
-                     updated_at    = now()
-                 WHERE id = $1`,
+                SET department_id = $2,
+                    doctor_id     = $3,
+                    scheduled_at  = (($4::date + $5::time)::timestamp
+                                    AT TIME ZONE '${TIME_ZONE}'),
+                    status        = $6,
+                    notes         = $7,
+                    updated_at    = now()
+                WHERE id = $1`,
                 [
                     current.id,
                     departmentId,
                     body.doctorId,
                     body.date,
                     body.time,
-                    moved && current.status === "Booked"
-                        ? "Rescheduled"
+                    moved && current.ui_status === "Booked"
+                        ? DB_STATUS["Rescheduled"]
                         : current.status,
-                    notes,
-                    phone
+                    notes
                 ]
             );
 
@@ -607,14 +608,14 @@ router.post("/:id/cancel", async (req, res) => {
 
         const result = await pool.query(
             `UPDATE appointments a
-             SET status = 'Cancelled',
+             SET status = $3,
                  cancel_reason = $2,
                  cancelled_at = now(),
                  updated_at = now()
              WHERE ${BY_REF}
-               AND a.status IN (${OPEN_SQL})
+               AND UPPER(a.status) IN (${OPEN_SQL})
              RETURNING COALESCE(a.external_appointment_id, a.id::text) AS ref`,
-            [req.params.id, reason]
+            [req.params.id, reason, DB_STATUS["Cancelled"]]
         );
 
         if (!result.rowCount) {
@@ -656,10 +657,10 @@ router.patch("/:id/status", async (req, res) => {
             `UPDATE appointments a
              SET status = $2, updated_at = now()
              WHERE ${BY_REF}
-               AND a.status IN (${OPEN_SQL})
+               AND UPPER(a.status) IN (${OPEN_SQL})
                AND a.scheduled_at <= now()
              RETURNING COALESCE(a.external_appointment_id, a.id::text) AS ref`,
-            [req.params.id, status]
+            [req.params.id, DB_STATUS[status]]
         );
 
         if (!result.rowCount) {
@@ -669,7 +670,7 @@ router.patch("/:id/status", async (req, res) => {
                 return fail(res, 404, "Appointment not found.");
             }
 
-            if (!OPEN_STATUSES.includes(existing.status)) {
+            if (!["Booked", "Rescheduled"].includes(existing.status)) {
                 return fail(
                     res,
                     409,

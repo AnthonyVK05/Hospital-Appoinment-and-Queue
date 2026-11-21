@@ -206,8 +206,40 @@ const AMS = (() => {
         };
     }
 
+    // Reads the expiry time from the token. The server still checks the
+    // signature on every request; this only stops the pages from opening
+    // with a token that has already expired (or is not a real token).
+    function tokenExpired(token) {
+        try {
+            const payload = JSON.parse(
+                atob(
+                    token
+                        .split(".")[1]
+                        .replace(/-/g, "+")
+                        .replace(/_/g, "/")
+                )
+            );
+
+            return (
+                typeof payload.exp === "number" &&
+                payload.exp * 1000 <= Date.now()
+            );
+        } catch {
+            return true;
+        }
+    }
+
     function isLoggedIn() {
-        return Boolean(getToken());
+        const token = getToken();
+
+        if (!token) return false;
+
+        if (tokenExpired(token)) {
+            clearSession();
+            return false;
+        }
+
+        return true;
     }
 
     function clearSession() {
@@ -334,7 +366,12 @@ const AMS = (() => {
                     }
                 );
 
-                if (!data || !data.session || !data.session.staff) {
+                if (
+                    !data ||
+                    !data.session ||
+                    !data.session.staff ||
+                    !data.session.token
+                ) {
                     throw new AmsError(
                         "Invalid login response from server.",
                         0,
@@ -349,10 +386,12 @@ const AMS = (() => {
                     adminID
                 );
 
-                // Temporary session marker.
+                // The signed token from the server (sent as a Bearer
+                // token by ams-api.js). It is kept in sessionStorage, so
+                // closing the tab ends the session.
                 sessionStorage.setItem(
                     SESSION_KEYS.token,
-                    "admin-session"
+                    data.session.token
                 );
 
                 return data;

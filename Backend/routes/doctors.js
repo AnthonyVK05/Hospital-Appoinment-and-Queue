@@ -6,6 +6,9 @@
 
         GET    /api/doctors?search=&department=&status=&page=&pageSize=
         GET    /api/doctors/:id
+        POST   /api/doctors                           add a doctor (ID is assigned here)
+        PUT    /api/doctors/:id                       edit a doctor
+        PUT    /api/doctors/:id/photo                 multipart, field "photo"
         PATCH  /api/doctors/:id/status                { "status": "Active" | "Inactive" }
 
         GET    /api/doctors/:id/consultation-hours    404 when none saved yet
@@ -24,7 +27,12 @@
         upcomingAppointments, status (+ the other profile columns).
 */
 
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+
 const express = require("express");
+const multer = require("multer");
 
 const router = express.Router();
 
@@ -32,8 +40,9 @@ const router = express.Router();
 const db = require("../config/database");
 const pool = db.pool || db;
 
-// Appointments that still count against a doctor.
-const OPEN_STATUSES = ["Booked", "Rescheduled"];
+// Appointments that still count against a doctor (stored, capital
+// letters; see lib/status.js).
+const { ACTIVE_DB: OPEN_STATUSES } = require("../lib/status");
 
 // Clinic time zone. Dates typed on the pages ("2026-11-10T09:00") have no
 // zone, so they are read as clinic time.
@@ -98,17 +107,18 @@ const DOCTOR_COLUMNS = `
     d.phone                        AS phone,
     d.email                        AS email,
     d.qualifications               AS qualifications,
-    d.years_of_experience          AS years_of_experience,
+    d.years_of_experience          AS experience_years,
     d.languages                    AS languages,
-    d.consultation_room            AS consultation_room,
+    d.consultation_room            AS room,
     d.photo_url                    AS photo_url,
+    d.bio                          AS bio,
     (${STATUS_SQL})                AS status,
     (
         SELECT COUNT(*)::int
         FROM appointments a
         WHERE a.doctor_id = d.doctor_id
           AND a.scheduled_at >= now()
-          AND a.status = ANY($1::text[])
+          AND UPPER(a.status) = ANY($1::text[])
     )                              AS upcoming_appointments
 `;
 
@@ -116,6 +126,31 @@ const DOCTOR_FROM = `
     FROM doctors d
     JOIN departments dep ON dep.id = d.department_id
 `;
+
+class HttpError extends Error {
+    constructor(status, message, extra) {
+        super(message);
+        this.status = status;
+        this.extra = extra;
+    }
+}
+
+// Photos saved by this server are stored as /uploads/doctors/<file>.
+// The pages get a full address, like the Cloudinary photos already in the
+// table, so they load from any port.
+const PHOTO_PREFIX = "/uploads/doctors/";
+
+function present(req, doctor) {
+    if (doctor && doctor.photo_url && doctor.photo_url.startsWith(PHOTO_PREFIX)) {
+        const origin =
+            process.env.PUBLIC_API_URL ||
+            req.protocol + "://" + req.get("host");
+
+        doctor.photo_url = origin + doctor.photo_url;
+    }
+
+    return doctor;
+}
 
 // ------------------------------------------------------------
 // GET /api/doctors
@@ -174,7 +209,10 @@ router.get("/", async (req, res) => {
             ? Number(rows[0].total_items)
             : 0;
 
-        rows.forEach(row => delete row.total_items);
+        rows.forEach(row => {
+            delete row.total_items;
+            present(req, row);
+        });
 
         res.json({
             success: true,
@@ -220,7 +258,7 @@ router.get("/:id", async (req, res) => {
             return fail(res, 404, "Doctor not found.");
         }
 
-        res.json({ success: true, doctor });
+        res.json({ success: true, doctor: present(req, doctor) });
     } catch (error) {
         console.error(error);
         fail(res, 500, "Could not load the doctor.");
@@ -273,13 +311,391 @@ router.patch("/:id/status", async (req, res) => {
 
         res.json({
             success: true,
-            doctor: await findDoctor(req.params.id)
+            doctor: present(req, await findDoctor(req.params.id))
         });
     } catch (error) {
         console.error(error);
         fail(res, 500, "Could not update the doctor.");
     }
 });
+
+// ============================================================
+// ADD AND EDIT A DOCTOR
+// ============================================================
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Same rules as AMS.validateDoctorInput in ams.js, plus the number check.
+function readDoctorInput(body) {
+    const data = body || {};
+    const text = value => String(value === undefined || value === null ? "" : value).trim();
+
+    const input = {
+        name: text(data.name),
+        department: text(data.department),
+        specialty: text(data.specialty),
+        phone: text(data.phone),
+        email: text(data.email),
+        qualifications: text(data.qualifications) || null,
+        languages: text(data.languages),
+        room: text(data.room),
+        bio: text(data.bio) || null,
+        status: data.status === undefined ? undefined : text(data.status),
+        years: null
+    };
+
+    const errors = {};
+
+    if (!input.name) errors.name = "Enter the doctor's name.";
+    if (!input.department) errors.department = "Select a department.";
+    if (!input.specialty) errors.specialty = "Enter the specialty.";
+    if (!input.phone) errors.phone = "Enter a phone number.";
+
+    if (!EMAIL.test(input.email)) {
+        errors.email = "Enter a valid email address.";
+    }
+
+    if (data.experienceYears !== undefined && data.experienceYears !== null && data.experienceYears !== "") {
+        const years = Number(data.experienceYears);
+
+        if (!Number.isInteger(years) || years < 0 || years > 60) {
+            errors.experienceYears = "Experience must be a whole number from 0 to 60.";
+        } else {
+            input.years = years;
+        }
+    }
+
+    if (
+        input.status !== undefined &&
+        !["Active", "On leave", "Inactive"].includes(input.status)
+    ) {
+        errors.status = "Choose a valid status.";
+    }
+
+    if (input.name.length > 150 || input.specialty.length > 150 || input.email.length > 150) {
+        errors.name = "A value is too long.";
+    }
+
+    return { input, errors };
+}
+
+function validationFailure(res, errors) {
+    return fail(res, 400, Object.values(errors)[0], {
+        code: "VALIDATION_ERROR",
+        details: errors
+    });
+}
+
+async function findDepartment(q, name) {
+    const { rows } = await q.query(
+        `SELECT id, department_code
+         FROM departments
+         WHERE department_name = $1 AND is_active`,
+        [name]
+    );
+
+    if (!rows.length) {
+        throw new HttpError(400, "Select a valid department.");
+    }
+
+    return rows[0];
+}
+
+// DOC-<department code>-<three digits>, next free number for that code.
+async function nextDoctorId(client, departmentCode) {
+    const code = String(departmentCode).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const prefix = "DOC-" + code + "-";
+
+    await client.query(
+        "SELECT pg_advisory_xact_lock(hashtext($1))",
+        ["doctor-id:" + prefix]
+    );
+
+    const { rows } = await client.query(
+        `SELECT COALESCE(
+                    MAX(substring(doctor_id FROM '([0-9]+)$')::bigint), 0
+                ) + 1 AS next
+         FROM doctors
+         WHERE starts_with(doctor_id, $1)`,
+        [prefix]
+    );
+
+    return prefix + String(rows[0].next).padStart(3, "0");
+}
+
+function handleDoctorError(res, error, fallback) {
+    if (error instanceof HttpError) {
+        return fail(res, error.status, error.message, error.extra);
+    }
+
+    // unique constraint (e-mail or doctor ID already used)
+    if (error && error.code === "23505") {
+        return fail(
+            res,
+            409,
+            "A doctor with this email address already exists."
+        );
+    }
+
+    console.error(fallback, error);
+    return fail(res, 500, fallback);
+}
+
+// ------------------------------------------------------------
+// POST /api/doctors
+// ------------------------------------------------------------
+router.post("/", async (req, res) => {
+    const { input, errors } = readDoctorInput(req.body);
+
+    if (Object.keys(errors).length) {
+        return validationFailure(res, errors);
+    }
+
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        const department = await findDepartment(client, input.department);
+        const doctorId = await nextDoctorId(client, department.department_code);
+
+        // "On leave" is not stored: it follows from a Leave block, so a
+        // new doctor is active unless Inactive was chosen.
+        await client.query(
+            `INSERT INTO doctors
+                (doctor_id, full_name, department_id, specialty, phone, email,
+                 qualifications, years_of_experience, languages,
+                 consultation_room, is_active, bio, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+                     now(), now())`,
+            [
+                doctorId,
+                input.name,
+                department.id,
+                input.specialty,
+                input.phone,
+                input.email,
+                input.qualifications,
+                input.years === null ? 0 : input.years,
+                input.languages,
+                input.room,
+                input.status !== "Inactive",
+                input.bio
+            ]
+        );
+
+        await client.query("COMMIT");
+
+        res.status(201).json({
+            success: true,
+            doctor: present(req, await findDoctor(doctorId))
+        });
+    } catch (error) {
+        await client.query("ROLLBACK").catch(() => {});
+        handleDoctorError(res, error, "Could not add the doctor.");
+    } finally {
+        client.release();
+    }
+});
+
+// ------------------------------------------------------------
+// PUT /api/doctors/:id
+// ------------------------------------------------------------
+router.put("/:id", async (req, res) => {
+    const { input, errors } = readDoctorInput(req.body);
+
+    if (Object.keys(errors).length) {
+        return validationFailure(res, errors);
+    }
+
+    try {
+        const current = await findDoctor(req.params.id);
+
+        if (!current) {
+            return fail(res, 404, "Doctor not found.");
+        }
+
+        const department = await findDepartment(pool, input.department);
+
+        // Same rule as PATCH /:id/status: no deactivating while the doctor
+        // still has upcoming appointments. "On leave" cannot be set here;
+        // an active doctor stays active.
+        let isActive = current.status !== "Inactive";
+
+        if (input.status === "Inactive") {
+            if (isActive && current.upcoming_appointments > 0) {
+                return fail(
+                    res,
+                    409,
+                    current.name + " still has upcoming appointments.",
+                    {
+                        code: "UPCOMING_APPOINTMENTS",
+                        upcomingAppointments: current.upcoming_appointments
+                    }
+                );
+            }
+
+            isActive = false;
+        } else if (input.status === "Active" || input.status === "On leave") {
+            isActive = true;
+        }
+
+        await pool.query(
+            `UPDATE doctors
+             SET full_name           = $2,
+                 department_id       = $3,
+                 specialty           = $4,
+                 phone               = $5,
+                 email               = $6,
+                 qualifications      = $7,
+                 years_of_experience = $8,
+                 languages           = $9,
+                 consultation_room   = $10,
+                 bio                 = $11,
+                 is_active           = $12,
+                 updated_at          = now()
+             WHERE doctor_id = $1`,
+            [
+                req.params.id,
+                input.name,
+                department.id,
+                input.specialty,
+                input.phone,
+                input.email,
+                input.qualifications,
+                input.years === null ? 0 : input.years,
+                input.languages,
+                input.room,
+                input.bio,
+                isActive
+            ]
+        );
+
+        res.json({
+            success: true,
+            doctor: present(req, await findDoctor(req.params.id))
+        });
+    } catch (error) {
+        handleDoctorError(res, error, "Could not update the doctor.");
+    }
+});
+
+// ------------------------------------------------------------
+// PUT /api/doctors/:id/photo   (multipart, field "photo")
+// Saved in backend/uploads/doctors with a random name; only real JPEG, PNG
+// and WebP images up to 2 MB are accepted.
+// ------------------------------------------------------------
+const UPLOAD_DIR = path.join(__dirname, "..", "uploads", "doctors");
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp"
+};
+
+// Checks the first bytes of the saved file, not just the name or the
+// type the browser claims.
+function looksLikeImage(file) {
+    const fd = fs.openSync(file, "r");
+    const head = Buffer.alloc(12);
+
+    try {
+        fs.readSync(fd, head, 0, 12, 0);
+    } finally {
+        fs.closeSync(fd);
+    }
+
+    const jpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    const png = head.slice(0, 8).equals(
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    );
+    const webp =
+        head.slice(0, 4).toString("ascii") === "RIFF" &&
+        head.slice(8, 12).toString("ascii") === "WEBP";
+
+    return jpeg || png || webp;
+}
+
+const photoUpload = multer({
+    storage: multer.diskStorage({
+        destination: UPLOAD_DIR,
+        filename: (req, file, cb) =>
+            cb(
+                null,
+                crypto.randomBytes(16).toString("hex") +
+                    (IMAGE_TYPES[file.mimetype] || "")
+            )
+    }),
+    limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+    fileFilter: (req, file, cb) => {
+        if (IMAGE_TYPES[file.mimetype]) return cb(null, true);
+
+        cb(new HttpError(400, "The photo must be a JPEG, PNG or WebP image."));
+    }
+});
+
+function removeStoredPhoto(photoUrl) {
+    if (!photoUrl || !photoUrl.startsWith(PHOTO_PREFIX)) return;
+
+    // path.basename keeps the delete inside the upload folder.
+    fs.unlink(
+        path.join(UPLOAD_DIR, path.basename(photoUrl)),
+        () => {}
+    );
+}
+
+router.put("/:id/photo", (req, res) => {
+    photoUpload.single("photo")(req, res, async uploadError => {
+        const file = req.file;
+
+        try {
+            if (uploadError) {
+                if (uploadError.code === "LIMIT_FILE_SIZE") {
+                    throw new HttpError(400, "The photo must be 2 MB or smaller.");
+                }
+
+                if (uploadError instanceof HttpError) throw uploadError;
+
+                throw new HttpError(400, "The photo could not be uploaded.");
+            }
+
+            if (!file) {
+                throw new HttpError(400, "Choose a photo to upload.");
+            }
+
+            if (!looksLikeImage(file.path)) {
+                throw new HttpError(400, "That file is not a valid image.");
+            }
+
+            const current = await findDoctor(req.params.id);
+
+            if (!current) {
+                throw new HttpError(404, "Doctor not found.");
+            }
+
+            await pool.query(
+                `UPDATE doctors
+                 SET photo_url = $2, updated_at = now()
+                 WHERE doctor_id = $1`,
+                [req.params.id, PHOTO_PREFIX + file.filename]
+            );
+
+            removeStoredPhoto(current.photo_url);
+
+            res.json({
+                success: true,
+                doctor: present(req, await findDoctor(req.params.id))
+            });
+        } catch (error) {
+            // The file is not kept when the upload is refused.
+            if (file) fs.unlink(file.path, () => {});
+
+            handleDoctorError(res, error, "Could not save the photo.");
+        }
+    });
+});
+
 
 // ============================================================
 // WEEKLY CONSULTATION HOURS
@@ -435,7 +851,7 @@ const OUTSIDE_HOURS_SQL = `
            a.scheduled_at
     FROM appointments a
     WHERE a.doctor_id = $1
-      AND a.status = ANY($2::text[])
+      AND UPPER(a.status) = ANY($2::text[])
       AND a.scheduled_at >= now()
       AND NOT EXISTS (
           SELECT 1
@@ -600,7 +1016,7 @@ function blockAffectedSql(doctorRef, startRef, endRef) {
                a.scheduled_at
         FROM appointments a
         WHERE a.doctor_id = ${doctorRef}
-          AND a.status = ANY($2::text[])
+          AND UPPER(a.status) = ANY($2::text[])
           AND a.scheduled_at >= now()
           AND a.scheduled_at <  ${endRef}
           AND a.scheduled_at + ${slotInterval(doctorRef)} > ${startRef}
@@ -618,7 +1034,7 @@ const BLOCK_SELECT = `
                SELECT COUNT(*)::int
                FROM appointments a
                WHERE a.doctor_id = u.doctor_id
-                 AND a.status = ANY($2::text[])
+                 AND UPPER(a.status) = ANY($2::text[])
                  AND a.scheduled_at >= now()
                  AND a.scheduled_at <  u.ends_at
                  AND a.scheduled_at + ${slotInterval("u.doctor_id")}

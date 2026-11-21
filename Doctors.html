@@ -32,7 +32,7 @@
  
             <ul class="sidebar-menu">
                 <li>
-                    <a href="HospitalAnalytics.html" class="active">
+                    <a href="HospitalAnalytics.html">
                         <i class="fa-solid fa-gauge"></i> Dashboard
                     </a>
                 </li>
@@ -41,14 +41,13 @@
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
-                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
                     </ul>
                 </li>
  
                 <li class="sidebar-group">Doctors</li>
                 <li>
                     <ul class="sidebar-sub">
-                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                        <li><a href="Doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
                     </ul>
                 </li>
  
@@ -138,7 +137,7 @@
                 </div>
  
                 <div class="empty-row" id="emptyMessage">No doctors match your filters.</div>
-                
+
                 <div class="pagination" id="pagination"></div>
             </section>
 
@@ -264,20 +263,20 @@
                 <div class="empty-row" id="blockEmpty">No OT, leave or other unavailable times for this doctor.</div>
             </section>
 
-            <!-- Deactivate doctor modal -->
-            <div class="modal-backdrop" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
-                <div class="modal">
-                    <h2 id="statusTitle">Deactivate doctor</h2>
-                    <p id="statusSummary"></p>
+    <!-- Deactivate doctor modal -->
+    <div class="modal-backdrop" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+        <div class="modal">
+            <h2 id="statusTitle">Deactivate doctor</h2>
+            <p id="statusSummary"></p>
 
-                    <div class="message-box warning" id="statusWarning"></div>
+            <div class="message-box warning" id="statusWarning"></div>
 
-                    <div class="modal-actions">
-                        <button type="button" class="action-button secondary" id="statusClose">Keep active</button>
-                        <button type="button" class="action-button danger" id="statusConfirm">Deactivate doctor</button>
-                    </div>
-                </div>
+            <div class="modal-actions">
+                <button type="button" class="action-button secondary" id="statusClose">Keep active</button>
+                <button type="button" class="action-button danger" id="statusConfirm">Deactivate doctor</button>
             </div>
+        </div>
+    </div>
  
         </main>
     </div>

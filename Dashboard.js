@@ -12,6 +12,33 @@ const el = id => document.getElementById(id);
             const n = Number(value || 0);
             return (Math.round(n * 10) / 10) + "%";
         }
+        const LIMIT = 5;
+        const expanded = { schedule: false, availability: false };
+        const lastData = { schedule: [], availability: [] };
+
+        // Builds "Showing 5 of 12 · [Show all]" and wires the toggle
+        function renderFooter(footerId, key, total, rerender) {
+            const footer = el(footerId);
+
+            if (total <= LIMIT) {
+                footer.innerHTML = "";
+                return;
+            }
+
+            const shown = expanded[key] ? total : LIMIT;
+
+            footer.innerHTML =
+                "<span>Showing " + shown + " of " + total + "</span>" +
+                '<button type="button" class="toggle-button">' +
+                (expanded[key] ? "Show fewer" : "Show all") + "</button>";
+
+            footer.querySelector("button").addEventListener("click", () => {
+                expanded[key] = !expanded[key];
+                rerender();
+            });
+        }
+
+        const FINISHED = ["completed", "cancelled", "no show", "noshow", "no-show"];
 
         const requiredElements = [
             "cToday",
@@ -52,18 +79,27 @@ const el = id => document.getElementById(id);
         }
  
         function renderSchedule(list) {
-            const rows = list || [];
- 
-            if (!rows.length) {
+            if (list) lastData.schedule = list;
+            const all = lastData.schedule;
+
+            if (!all.length) {
                 el("scheduleRows").innerHTML = '<tr><td colspan="6">No appointments today.</td></tr>';
+                el("scheduleFooter").innerHTML = "";
                 return;
             }
- 
+
+            // Active appointments first (by time), finished ones last
+            const isDone = a => FINISHED.includes(String(a.status || "").toLowerCase());
+            const sorted = [...all].sort((a, b) =>
+                (isDone(a) - isDone(b)) || String(a.time).localeCompare(String(b.time)));
+
+            const rows = expanded.schedule ? sorted : sorted.slice(0, LIMIT);
+
             el("scheduleRows").innerHTML = rows.map(a => {
                 const link = AMS.canEdit(a)
                     ? '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="action-link">Edit</a>'
                     : '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="action-link">View</a>';
- 
+
                 return "<tr>" +
                     "<td>" + esc(AMS.formatTime(a.time)) + "</td>" +
                     "<td>" + esc(a.patientName) + "</td>" +
@@ -72,23 +108,31 @@ const el = id => document.getElementById(id);
                     '<td><span class="badge ' + AMS.getStatusBadge(a.status) + '">' + esc(a.status) + "</span></td>" +
                     "<td>" + link + "</td></tr>";
             }).join("");
+
+            renderFooter("scheduleFooter", "schedule", all.length, () => renderSchedule());
         }
  
         function renderAvailability(list) {
-            const rows = list || [];
- 
-            if (!rows.length) {
+            if (list) lastData.availability = list;
+            const all = lastData.availability;
+
+            if (!all.length) {
                 el("availabilityList").innerHTML = '<li class="availability-row"><div class="availability-meta">No doctors to show.</div></li>';
+                el("availabilityFooter").innerHTML = "";
                 return;
             }
- 
+
+            const rows = expanded.availability ? all : all.slice(0, LIMIT);
+
             el("availabilityList").innerHTML = rows.map(d =>
                 '<li class="availability-row"><div>' +
                     '<div class="availability-name">' + esc(d.doctorName) + "</div>" +
                     '<div class="availability-meta">' + esc(d.department) + (d.note ? ", " + esc(d.note) : "") + "</div></div>" +
                     '<span class="badge ' + AMS.getAvailabilityBadge(d.state) + '">' + esc(d.state) + "</span></li>").join("");
+
+            renderFooter("availabilityFooter", "availability", all.length, () => renderAvailability());
         }
- 
+        
         function renderAttention(list) {
             const items = list || [];
  

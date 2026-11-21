@@ -3,14 +3,31 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const helmet = require('helmet');
  
 // config/database.js should export the pg Pool: module.exports = pool;
 // ({ pool } is accepted too.)
 const db = require('./config/database');
 const pool = db.pool || db;
+
+// JWT protection (middleware/authMiddleware.js)
+const { verifyToken } = require('./middleware/authMiddleware');
  
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Security headers (X-Content-Type-Options, X-Frame-Options, ...)
+app.use(helmet());
+
+// Doctor photos (routes/doctors.js saves them in backend/uploads/doctors).
+// They are shown in <img> and CSS backgrounds, which cannot send a token,
+// so this folder is public; only images are ever written to it. The
+// cross-origin header lets pages on Live Server (another port) show them.
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    index: false,
+    dotfiles: 'deny',
+    setHeaders: res => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+}));
 
 // Backend homepage
 app.get('/', (req, res) => {
@@ -37,7 +54,7 @@ app.get('/', (req, res) => {
 // Parse JSON request bodies
 app.use(express.json({ limit: '1mb' }));
 
- 
+
 // Minimal CORS so pages served by VS Code Live Server (port 5500) can call this API.
 // Add more origins in .env: CORS_ORIGIN=http://127.0.0.1:5500,http://localhost:5500
 const allowedOrigins = (process.env.CORS_ORIGIN ||
@@ -61,6 +78,19 @@ app.use((req, res, next) => {
 });
  
 /* ------------------------------------------------------------------ */
+/* Authentication: every /api request needs a valid token              */
+/* ------------------------------------------------------------------ */
+
+// Only these may be called without a token. This must stay AFTER the CORS
+// block above: the browser's OPTIONS preflight carries no token.
+const PUBLIC_API = ['GET /health', 'POST /auth/login'];
+
+app.use('/api', (req, res, next) => {
+    if (PUBLIC_API.includes(req.method + ' ' + req.path)) return next();
+    verifyToken(req, res, next);
+});
+
+/* ------------------------------------------------------------------ */
 /* Test routes                                                         */
 /* ------------------------------------------------------------------ */
  
@@ -80,29 +110,15 @@ app.get('/api/health', async (req, res) => {
     }
 });
  
-// Step 6: test reading the shared departments table (open http://localhost:3000/api/departments-test)
-// Remove this route once your module has its own routes.
-app.get('/api/departments-test', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM departments ORDER BY 1 LIMIT 50');
-        res.json({ count: result.rowCount, rows: result.rows });
-    } catch (err) {
-        console.error('Departments test failed:', err.message);
-        res.status(500).json({ error: 'Could not read the departments table.' });
-    }
-});
- 
 /* ------------------------------------------------------------------ */
 /* Module routes                                                       */
 /* ------------------------------------------------------------------ */
- 
+
 // Every file in backend/routes is mounted automatically:
 //   routes/appointments.js  ->  /api/appointments
 //   routes/doctors.js       ->  /api/doctors
-// Each file must export an express.Router().
-/* ------------------------------------------------------------------ */
-/* Module routes                                                       */
-/* ------------------------------------------------------------------ */
+// Each file must export an express.Router(). Helper code goes in
+// backend/lib or backend/middleware, never in routes/.
 
 const routesDir = path.join(__dirname, 'routes');
 
@@ -192,4 +208,3 @@ function shutdown(signal) {
  
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
- 
