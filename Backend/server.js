@@ -32,6 +32,24 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     setHeaders: res => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
 }));
 
+// Backend homepage
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Hospital Analytics API is running!',
+        api: 'analytic-api',
+        endpoints: {
+            health: '/api/health',
+            doctors: '/api/doctors',
+            appointments: '/api/appointments',
+            departments: '/api/departments',
+            auth: '/api/auth',
+            dashboard: '/api/dashboard',
+            analytics: '/api/analytics'
+        }
+    });
+});
+
 
  
 /* ------------------------------------------------------------------ */
