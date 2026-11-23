@@ -582,11 +582,15 @@ router.put("/:id", async (req, res) => {
 
 // ------------------------------------------------------------
 // PUT /api/doctors/:id/photo   (multipart, field "photo")
-// Saved in backend/uploads/doctors with a random name; only real JPEG, PNG
-// and WebP images up to 2 MB are accepted.
+// The image is uploaded to Cloudinary and photo_url stores the full
+// https link, so the admin pages and the booking side load the same URL.
+// Only real JPEG, PNG and WebP images up to 2 MB are accepted.
 // ------------------------------------------------------------
+const cloudinary = require("../config/cloudinary");
+
+// Photos saved before the move to Cloudinary are in this folder.
+// It is only used to delete an old local photo when it is replaced.
 const UPLOAD_DIR = path.join(__dirname, "..", "uploads", "doctors");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const IMAGE_TYPES = {
     "image/jpeg": ".jpg",
@@ -594,39 +598,24 @@ const IMAGE_TYPES = {
     "image/webp": ".webp"
 };
 
-// Checks the first bytes of the saved file, not just the name or the
+// Checks the first bytes of the file, not just the name or the
 // type the browser claims.
-function looksLikeImage(file) {
-    const fd = fs.openSync(file, "r");
-    const head = Buffer.alloc(12);
-
-    try {
-        fs.readSync(fd, head, 0, 12, 0);
-    } finally {
-        fs.closeSync(fd);
-    }
+function looksLikeImage(buffer) {
+    const head = buffer.subarray(0, 12);
 
     const jpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
-    const png = head.slice(0, 8).equals(
+    const png = head.subarray(0, 8).equals(
         Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
     );
     const webp =
-        head.slice(0, 4).toString("ascii") === "RIFF" &&
-        head.slice(8, 12).toString("ascii") === "WEBP";
+        head.subarray(0, 4).toString("ascii") === "RIFF" &&
+        head.subarray(8, 12).toString("ascii") === "WEBP";
 
     return jpeg || png || webp;
 }
 
 const photoUpload = multer({
-    storage: multer.diskStorage({
-        destination: UPLOAD_DIR,
-        filename: (req, file, cb) =>
-            cb(
-                null,
-                crypto.randomBytes(16).toString("hex") +
-                    (IMAGE_TYPES[file.mimetype] || "")
-            )
-    }),
+    storage: multer.memoryStorage(),          // nothing is written to disk
     limits: { fileSize: 2 * 1024 * 1024, files: 1 },
     fileFilter: (req, file, cb) => {
         if (IMAGE_TYPES[file.mimetype]) return cb(null, true);
@@ -634,6 +623,26 @@ const photoUpload = multer({
         cb(new HttpError(400, "The photo must be a JPEG, PNG or WebP image."));
     }
 });
+
+function uploadToCloudinary(buffer, doctorId) {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader
+            .upload_stream(
+                {
+                    folder: "hospital/doctors",
+                    public_id: doctorId,       // one photo per doctor, replaced on re-upload
+                    overwrite: true,
+                    invalidate: true,
+                    resource_type: "image",
+                    transformation: [
+                        { width: 400, height: 400, crop: "fill", gravity: "auto" }
+                    ]
+                },
+                (error, result) => (error ? reject(error) : resolve(result))
+            )
+            .end(buffer);
+    });
+}
 
 function removeStoredPhoto(photoUrl) {
     if (!photoUrl || !photoUrl.startsWith(PHOTO_PREFIX)) return;
@@ -664,7 +673,7 @@ router.put("/:id/photo", (req, res) => {
                 throw new HttpError(400, "Choose a photo to upload.");
             }
 
-            if (!looksLikeImage(file.path)) {
+            if (!looksLikeImage(file.buffer)) {
                 throw new HttpError(400, "That file is not a valid image.");
             }
 
@@ -674,13 +683,16 @@ router.put("/:id/photo", (req, res) => {
                 throw new HttpError(404, "Doctor not found.");
             }
 
+            const uploaded = await uploadToCloudinary(file.buffer, req.params.id);
+
             await pool.query(
                 `UPDATE doctors
                  SET photo_url = $2, updated_at = now()
                  WHERE doctor_id = $1`,
-                [req.params.id, PHOTO_PREFIX + file.filename]
+                [req.params.id, uploaded.secure_url]
             );
 
+            // Only deletes an old local /uploads/doctors file, never a Cloudinary link.
             removeStoredPhoto(current.photo_url);
 
             res.json({
@@ -688,9 +700,6 @@ router.put("/:id/photo", (req, res) => {
                 doctor: present(req, await findDoctor(req.params.id))
             });
         } catch (error) {
-            // The file is not kept when the upload is refused.
-            if (file) fs.unlink(file.path, () => {});
-
             handleDoctorError(res, error, "Could not save the photo.");
         }
     });
