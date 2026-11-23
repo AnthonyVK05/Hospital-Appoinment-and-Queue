@@ -224,10 +224,6 @@
         })();
 
     /* ------------------------------------------------------------------ */
-            const el = id => document.getElementById(id);
-        const esc = AMS_UI.esc;
- 
-        let ticket = 0;
  
         function fillDepartments() {
             el("dept").innerHTML = '<option value="">All departments</option>' +
@@ -350,15 +346,11 @@
         })();
 
     /* ------------------------------------------------------------------ */
-            const el = id => document.getElementById(id);
-        const esc = AMS_UI.esc;
  
         const DAYS  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         const HOURS = [9, 10, 11, 14, 15, 16];
         const pad = n => String(n).padStart(2, "0");
         const hourLabel = h => pad(h) + ":00";
- 
-        let ticket = 0;
  
         async function fillFilters() {
             el("dept").innerHTML = '<option value="">All departments</option>' +

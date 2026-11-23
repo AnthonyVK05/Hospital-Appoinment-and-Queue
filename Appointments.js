@@ -237,10 +237,6 @@
         })();
 
         /**-------------- */
-
-        const el = id => document.getElementById(id);
-        const esc = AMS_UI.esc;
-        const params = new URLSearchParams(location.search);
         const editId = params.get("id");
  
         let existing = null;     // the appointment being edited, if any
