@@ -268,7 +268,6 @@ el("appointmentForm").addEventListener("submit", async e => {
         el("pageSubtitle").textContent = readOnly
             ? "This record is closed. You can view it but not change it."
             : "Change the details or pick a new slot to reschedule.";
-        el("notifyLabel").textContent = "Notify the patient about this change";
 
         el("patientId").value = existing.patientId || "";
         el("patientId").readOnly = true;
